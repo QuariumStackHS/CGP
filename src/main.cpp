@@ -5,6 +5,7 @@
 this is an exemple of what you can do using TUI.hpp and TUI.cpp in this Repository
 
 */
+#include <cstring>
 #include <CLAB.hpp>
 #include <TUI.hpp>
 #include <Keys.h>
@@ -828,7 +829,7 @@ int main(int argc, char **argv)
         Docs->add_Horizon("~In the Build section you can compile,link or build!", 12, 1);
         Docs->add_Horizon("~In the Deps section you have a tree of Dependancy(Work In Progress)", 14, 1);
         Docs->add_Horizon("~In the Git section you can commit,push or fetch ", 16, 1);
-        Docs->add_Horizon("NOTE: Dependancy are Config File of cgp (.gp/.cg)", 18, 1);
+        Docs->add_Horizon("NOTE: Dependancy are Config File of cgp (.cgp)", 18, 1);
         Docs->add_Horizon("      When building the parent, cgp will build every dependancy", 19, 1);
         Docs->add_Horizon("                                and will link concidering of it", 20, 1);
         MSTS *INCPath = new MSTS("|Path to include", "_", "");
