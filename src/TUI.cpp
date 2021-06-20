@@ -257,7 +257,10 @@ void EditorView::render()
         string Data = "";
         if (this->current_index == i)
         {
-            Data = Values[i]->_Key + " : " + RED + Values[i]->_Value + RESET;
+            if(Values[i]->_Key.size()<=2)
+            Data = GREEN+ Values[i]->_Key +RESET+ " : " + RED + Values[i]->_Value + RESET;
+            else
+             Data = Values[i]->_Key + " : " + RED + Values[i]->_Value + RESET;
         }
         else
         {

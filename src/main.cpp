@@ -442,17 +442,21 @@ void recursive_mkdir(const char *p)
                 mkdir(current.c_str());
         }
 }
-/*
-unsigned char *gen_IV(unsigned char iv[32]){
 
-    for(int i=0;i<=IVlengh-1;i++){
-        iv[i]=rand() % 255 + 1;
-    }
-    return iv;
+unsigned char *gen_IV(unsigned char iv[32]);
+void *list(char **argb, int argc, MSTS_Vector *)
+{
+        std::string path(".cgp/");
+        std::string ext(".cgp");
+        for (auto &p : fs::recursive_directory_iterator(path))
+        {
+                if (p.path().extension() == ext)
+                        std::cout << "\t" << p.path().stem().string() << ".cgp at .cgp/\n\n";
+        }
 }
-*/
-void *Pack(char **argb, int argc, MSTS_Vector *IN){
-        /*
+void *Pack(char **argb, int argc, MSTS_Vector *IN)
+{
+
         string exportPath;
         bool nextis;
         for (int i = 0; i < argc; i++)
@@ -462,28 +466,40 @@ void *Pack(char **argb, int argc, MSTS_Vector *IN){
                 else if (nextis)
                         exportPath = argb[i];
         }
-        Packtor*This=new Packtor();
+        Packtor *This = new Packtor();
         unsigned char IV[32];
         gen_IV(IV);
-        This->set_IV((char*)IV,32);
-        vector<string>ki;
-        split(IN->get_from_alias("source.cppfiles")->_Value,ki,' ');
-        for(int i=0;i<ki.size();i++){
-                if ((strcmp(ki[i].c_str(), " ") != 0) && (strcmp(ki[i].c_str(), "") != 0)){
-        ifstream KK(ki[i],ios::in|ios::binary);
-                //cout<<j<<endl;
-                //cout<<(int64_t)<<endl;
-                string buff;
-                //cout<<GetFileSize(ki[i])<<ki[i]<<endl;
-                KK.read(buff,buff.size());
-                //cout<<buff<<endl;
-                
-                This->add_file((char*)ki[i].c_str(),ki[i].size(),(char*)&buff,buff.size());
+        This->set_IV((char *)IV, sizeof(unsigned char) * 32);
+        vector<string> ki;
+        split(IN->get_from_alias("source.cppfiles")->_Value, ki, ' ');
+        for (int i = 0; i < ki.size(); i++)
+        {
+                if ((strcmp(ki[i].c_str(), " ") != 0) && (strcmp(ki[i].c_str(), "") != 0))
+                {
+                        ifstream ll(ki[i], ios::in);
+                        string line;
+                        int c = 0;
+                        while (getline(ll, line))
+                        {
+                                //cout << line << endl;
+                                c += line.length();
+                        }
+                        //cout<<c<<endl;
+                        ll.close();
+                        ifstream KK(ki[i], ios::out | ios::binary);
+                        //cout<<j<<endl;
+                        //cout<<(int64_t)<<endl;
+                        char buff[c];
+                        cout << sizeof(buff) << endl;
+                        //cout<<GetFileSize(ki[i])<<ki[i]<<endl;
+                        KK.read(buff, c * sizeof(char));
+                        cout << buff << endl;
+
+                        This->add_file((char *)ki[i].c_str(), ki[i].size(), (char *)&buff, sizeof(char) * c);
                 }
         }
         //This->add_file();
-        This->Gen_pack((char*)exportPath.c_str());
-        */
+        This->Gen_pack((char *)exportPath.c_str());
 }
 void *_export(char **argb, int argc, MSTS_Vector *IN)
 {
@@ -570,12 +586,130 @@ void *_export(char **argb, int argc, MSTS_Vector *IN)
                 }
         }
 }
+string show_menu()
+{
+        bool Lock = 0;
+        string Value;
+        MasterView *MF = new MasterView(MaxX, MaxY);
+        EditorView *Menu = new EditorView(1, 1);
+        EditorView *Menu_new = new EditorView(10, 14);
+        Menu_new->add_MSTS(new MSTS("New project name", "", ""), 0);
+        Menu_new->add_MSTS(new MSTS("=>", "", ""), 1);
+
+        Menu->add_MSTS(new MSTS(">", ((string)BLUE) + "Create New" + RESET, ""), 0);
+
+        MF->addView(Menu);
+        std::string path(".cgp/");
+        std::string ext(".cgp");
+        int i = 1;
+        for (auto &p : fs::recursive_directory_iterator(path))
+        {
+                if (p.path().extension() == ext)
+                {
+                        Menu->add_MSTS(new MSTS(">", p.path().stem().string(), ""), i);
+                        i++;
+                }
+                //std::cout<<"\t" << p.path().stem().string()<< ".cgp at .cgp/\n\n";
+        }
+        system("stty raw");
+        char ch;
+        while (ch != 27)
+        {
+
+                if (Lock == 1)
+                {
+
+                        if (((char)ch == (char)'\r'))
+                        {
+                                Lock = 0;
+                                Menu_new->clear();
+                                MF->Render();
+                                MF->RemoveView(Menu_new);
+                                MF->clear();
+                        }
+                        else
+                        {
+                                Menu_new->Values[0]->_Value += (char)ch;
+                        }
+                        MF->Render();
+                        Menu_new->render();
+                        MF->Display();
+                }
+                else if ((ch == Down) && (Menu->current_index < Menu->Values.size()) && (Lock == 0))
+                {
+
+                        Menu->current_index++;
+                }
+                else if ((ch == UP) && (Menu->current_index > 0) && (Lock == 0))
+                {
+                        Menu->current_index--;
+                }
+                else if((ch==UP)&&(Menu->current_index==-1)&&(Lock==0)){
+                        Menu_new->current_index=0;
+                                                MF->Render();
+                        Menu_new->render();
+                        MF->Display();
+                }
+                else if ((ch == Down) && (Menu->current_index==-1) && (Lock == 0))
+                {
+
+                        Menu_new->current_index=1;
+                                                MF->Render();
+                        Menu_new->render();
+                        MF->Display();
+                }
+                else if (ch == 13 && (Lock == 0))
+                {
+                        if (Menu->current_index > 0)
+                        {
+                                Value = (Menu->Values[Menu->current_index]->_Value);
+                                //cout<<Value<<endl;
+                                ch = '\n';
+                                system("stty cooked");
+                                string v = "cgp " + Value;
+                                system(v.c_str());
+                                system("stty raw");
+                        }
+                        else if(Menu->current_index==-1){
+                                Value = (Menu_new->Values[0]->_Value);
+                                system("stty cooked");
+                                string v = "cgp " + Value;
+                                system(v.c_str());
+                                system("stty raw"); 
+                        }
+                        else
+                        {
+                                MF->addView(Menu_new);
+                                Lock = 1;
+                                Menu->current_index=-1;
+                        }
+                }
+                else if (ch == 27)
+                {system("stty cooked");
+                        system("clear");
+                }
+                MF->clear();
+                Menu->render();
+                MF->Render();
+                Menu_new->render();
+                MF->Display();
+                ch = getchar();
+        }
+        delete MF;
+        delete Menu;
+        //cout<<Value<<endl;
+        system("stty cooked");
+        return "";
+}
 int main(int argc, char **argv)
 {
+        string Fname = ".cgp/";
+        bool frommenu = 0;
         if (argc <= 1)
         {
-                cout << "you must pass the name of the config file!" << endl;
+                show_menu(); //<<endl;
                 exit(0);
+                frommenu = 1;
         }
         vector<string> dirs;
         split(argv[1], dirs, '/');
@@ -598,7 +732,7 @@ int main(int argc, char **argv)
         Laboratory.add_Callable(&build, "--build", "compile and link project", NLV);
         Laboratory.add_Callable(&run, "--run", "./APPNAME", NLV);
         LaboratoryCmd.add_Callable(&_export, "--export", "export project to a folder", NLV);
-        LaboratoryCmd.add_Callable(&Pack, "--pack", "Pack project to a File", NLV);
+        LaboratoryCmd.add_Callable(&list, "--list", "list project", NLV);
         //LaboratoryCmd.add_Callable(&_import, "--import", "import project here", NLV);
         // Laboratory.add_Callable(&build, "--add-git-dep", "add a git ", NLV);
         //Laboratory.add_Callable(&update, "--update", "compile and link project", NLV);
@@ -608,10 +742,10 @@ int main(int argc, char **argv)
         //Reltt_INT *Reltt=new Reltt_INT(argc,argv);
         MasterView *MF = new MasterView(MaxX, MaxY);
         MF->set_MSTS_Vector(NLV);
-        string Fname = ".cgp/";
+        //string Fname = ".cgp/";
         string command = "";
-
-        Fname += as_cgp((char *)dirs[dirs.size() - 1].c_str());
+        if (frommenu == 0)
+                Fname += as_cgp((char *)dirs[dirs.size() - 1].c_str());
         MSTS *thisinfo = new MSTS("", Fname, "thiscfg");
         MSTS *thisinfoargv0 = new MSTS("", argv[0], "exe");
         MSTS *currentworkingdir = new MSTS("", fs::current_path(), "cwd");

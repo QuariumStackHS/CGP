@@ -53,9 +53,9 @@ int Packtor::Gen_pack(char *filename)
     for (int i = 0; i < this->DP->enc_files.size(); i++)
     {
         Archive.write((char *)&this->DP->enc_files[i]->filename_Size, sizeof(this->DP->enc_files[i]->filename_Size));
-        Archive.write((char *)this->DP->enc_files[i]->filename, this->DP->enc_files[i]->filename_Size);
+        Archive.write((char *)this->DP->enc_files[i]->filename, this->DP->enc_files[i]->filename_Size*sizeof(char));
         Archive.write((char *)&this->DP->enc_files[i]->DATA_Size, sizeof(this->DP->enc_files[i]->DATA_Size));
-        Archive.write((char *)this->DP->enc_files[i]->data, this->DP->enc_files[i]->DATA_Size);
+        Archive.write((char *)this->DP->enc_files[i]->data, this->DP->enc_files[i]->DATA_Size*sizeof(char));
     }
     cout<<"end"<<endl;
     Archive.close();
