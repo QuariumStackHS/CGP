@@ -1,6 +1,7 @@
 
 #include <vector>
 using namespace std;
+unsigned char *gen_IV(unsigned char iv[32]);
 class Packtor{
 
     public:

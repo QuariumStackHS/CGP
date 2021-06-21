@@ -9,13 +9,7 @@ struct Aes_Save{
     char Key[Keylengh+1];
     char endKey=-1;
 };
-unsigned char *gen_IV(unsigned char iv[16]){
-
-    for(int i=0;i<=IVlengh-1;i++){
-        iv[i]=rand() % 255 + 1;
-    }
-    return iv;
-}
+unsigned char *gen_IV(unsigned char iv[16]);
 
 unsigned char *Gen_Key(unsigned char key[32]){
     int v;

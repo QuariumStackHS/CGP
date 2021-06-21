@@ -1,6 +1,7 @@
 #include <Packtor.hpp>
 #include <iostream>
 #include <fstream>
+#include <AES.h>
 Packtor::cyphFile::cyphFile(){
 
 }
@@ -110,4 +111,10 @@ Packtor::DataPack *Packtor::Load_pack(char *filename)
         //cout<<"\tchars:"<<NewDataPack->enc_files[i]->DATA_Size<<endl;
     //}
 }
+unsigned char *gen_IV(unsigned char iv[32]){
 
+    for(int i=0;i<=IVlengh-1;i++){
+        iv[i]=rand() % 255 + 1;
+    }
+    return iv;
+}

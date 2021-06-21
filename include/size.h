@@ -1,2 +1,17 @@
-    const int MaxX=27;
-    const int MaxY=70;
+
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <unistd.h>
+
+/*
+int main (int argc, char **argv)
+{
+    
+    
+
+    printf ("lines %d\n", w.ws_row);
+    printf ("columns %d\n", w.ws_col);
+    return 0;  // make sure your main returns int
+}*/
+const int MaxX=36;
+const int MaxY=80;

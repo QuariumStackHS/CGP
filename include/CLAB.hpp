@@ -25,12 +25,16 @@ public:
     CLAB();
     void add_Callable(void *(Taddr)(char **, int, WildCard), string, string, WildCard);
     void run(string, char **, int);
+    void show_desk();
 
     WildCard get_Callable(void *(*Taddr)(char **, int, WildCard));
     WildCard get_Callable(string);
 };
-
-
+template <class WildCard>
+void show_desk(){
+for(int i=0;i<this->Switchs.size();i++)
+cout<<this->Switchs[i].Name<<" | "<< this->Switchs[i].Desk<<endl;
+}
 template <class WildCard>
 void CLAB<WildCard>::add_Callable(void *(Taddr)(char **, int, WildCard), string name, string desk, WildCard wcs)
 {

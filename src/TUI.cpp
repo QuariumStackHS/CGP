@@ -2,6 +2,7 @@
 #include <cstring>
 #include <sstream>
 int Debug = 0;
+struct winsize s;
 View::ViewChar::ViewChar(int X, int Y, char C)
 {
     this->Char = C;
@@ -157,6 +158,7 @@ MasterView::MasterView(int maxX, int maxY)
 }
 void MasterView::Save(string Filename)
 {
+    if(Filename[5]!='-'){
     vector<string> Did;
     ofstream myfile;
     myfile.open(Filename.c_str(), ios_base::out);
@@ -201,6 +203,7 @@ void MasterView::Save(string Filename)
     }
     myfile << ss.str();
     myfile.close();
+    }
 }
 void MasterView::addView(View *IN)
 {

@@ -1,0 +1,1 @@
+#define CGP_BIN "/Users/christopherclement/Documents/Pathed/"

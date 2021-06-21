@@ -5,7 +5,6 @@
 this is an exemple of what you can do using TUI.hpp and TUI.cpp in this Repository
 
 */
-#include <cstring>
 #include <CLAB.hpp>
 #include <TUI.hpp>
 #include <Keys.h>
@@ -22,6 +21,7 @@ namespace fs = std::filesystem;
 #include <time.h>
 #include <unistd.h>
 #include <termios.h>
+#include <USR.h>
 string as_cgp(char *file)
 {
         int i = 0;
@@ -272,7 +272,7 @@ string Get_Data(string Dependancy, string Key)
         }
 
         else
-                cout << "Unable to Load Dependancy\"" << Dependancy << "\"" << endl;
+               // cout << "Unable to Load Dependancy\"" << Dependancy << "\"" << endl;
         return "";
 }
 
@@ -444,7 +444,6 @@ void recursive_mkdir(const char *p)
         }
 }
 
-unsigned char *gen_IV(unsigned char iv[32]);
 void *list(char **argb, int argc, MSTS_Vector *)
 {
         std::string path(".cgp/");
@@ -573,7 +572,7 @@ void *_export(char **argb, int argc, MSTS_Vector *IN)
                 if ((strcmp(Deps[i].c_str(), " ") != 0) && (strcmp(Deps[i].c_str(), "") != 0))
                 {
                         string cmd = IN->get_from_alias("exe")->_Value + ' ' + Deps[i] + " --export " + exportPath;
-                        cout << cmd << endl;
+                        //cout << cmd << endl;
                         system(cmd.c_str());
                 }
         }
@@ -645,17 +644,18 @@ string show_menu()
                 {
                         Menu->current_index--;
                 }
-                else if((ch==UP)&&(Menu->current_index==-1)&&(Lock==0)){
-                        Menu_new->current_index=0;
-                                                MF->Render();
+                else if ((ch == UP) && (Menu->current_index == -1) && (Lock == 0))
+                {
+                        Menu_new->current_index = 0;
+                        MF->Render();
                         Menu_new->render();
                         MF->Display();
                 }
-                else if ((ch == Down) && (Menu->current_index==-1) && (Lock == 0))
+                else if ((ch == Down) && (Menu->current_index == -1) && (Lock == 0))
                 {
 
-                        Menu_new->current_index=1;
-                                                MF->Render();
+                        Menu_new->current_index = 1;
+                        MF->Render();
                         Menu_new->render();
                         MF->Display();
                 }
@@ -671,22 +671,24 @@ string show_menu()
                                 system(v.c_str());
                                 system("stty raw");
                         }
-                        else if(Menu->current_index==-1){
+                        else if (Menu->current_index == -1)
+                        {
                                 Value = (Menu_new->Values[0]->_Value);
                                 system("stty cooked");
                                 string v = "cgp " + Value;
                                 system(v.c_str());
-                                system("stty raw"); 
+                                system("stty raw");
                         }
                         else
                         {
                                 MF->addView(Menu_new);
                                 Lock = 1;
-                                Menu->current_index=-1;
+                                Menu->current_index = -1;
                         }
                 }
                 else if (ch == 27)
-                {system("stty cooked");
+                {
+                        system("stty cooked");
                         system("clear");
                 }
                 MF->clear();
@@ -702,6 +704,58 @@ string show_menu()
         system("stty cooked");
         return "";
 }
+void *BIN_at_this(char **argb, int argc, MSTS_Vector *IN)
+{
+        string Dest=fs::current_path();
+        string import_Name;
+        //bool nextis;
+        for (int i = 0; i < argc; i++)
+        {
+                if (strcmp(argb[i], "--import") == 0)
+                        //nextis = 1;
+                        import_Name = argb[i - 1];
+                //else if (nextis)
+        }
+        string LibPath = ((string)CGP_BIN) + ".CGP_LIB/";
+        if (!exists(LibPath))
+        {
+                recursive_mkdir(LibPath.c_str());
+        }
+        fs::current_path(LibPath + import_Name+"/");
+        string cmd = "cgp " + import_Name + " --export " + Dest;
+        //cout << cmd << endl;
+        system(cmd.c_str());
+}
+void *Add_at_Bin(char **argb, int argc, MSTS_Vector *IN)
+{
+        string import_Name;
+        //bool nextis;
+        for (int i = 0; i < argc; i++)
+        {
+                if (strcmp(argb[i], "--add") == 0)
+                        //nextis = 1;
+                        import_Name = argb[i - 1];
+                //else if (nextis)
+        }
+        string LibPath = ((string)CGP_BIN) + ".CGP_LIB/";
+        if (!exists(LibPath))
+        {
+                recursive_mkdir(LibPath.c_str());
+        }
+        string cmd = "cgp " + import_Name + " --export " + LibPath + import_Name;
+        //cout << cmd << endl;
+        system(cmd.c_str());
+}
+void *listLib(char **argb, int argc, MSTS_Vector *)
+{string LibPath = ((string)CGP_BIN) + ".CGP_LIB/";
+        std::string path(LibPath);
+        //std::string ext(".cgp");
+        for (auto &p : fs::directory_iterator(path))
+        {
+                //if (p.path().extension() == ext)
+                        std::cout << " \"" << p.path().stem().string() << "\" in ("<<p.path().string()<<")"<<endl;
+        }
+}
 int main(int argc, char **argv)
 {
         string Fname = ".cgp/";
@@ -712,19 +766,23 @@ int main(int argc, char **argv)
                 exit(0);
                 frommenu = 1;
         }
-        vector<string> dirs;
-        split(argv[1], dirs, '/');
         string path;
+        vector<string> dirs;
+        
+        split(argv[1], dirs, '/');
+        
         for (int j = 0; j < dirs.size() - 1; j++)
         {
                 path += dirs[j];
         }
         if (strcmp(path.c_str(), "") != 0)
                 fs::current_path(path.c_str());
+        
         if (!fs::is_directory(".cgp"))
         {
                 mkdir(".cgp/");
         }
+
         CLAB<MSTS_Vector *> Laboratory;
         CLAB<MSTS_Vector *> LaboratoryCmd;
 
@@ -733,6 +791,9 @@ int main(int argc, char **argv)
         Laboratory.add_Callable(&build, "--build", "compile and link project", NLV);
         Laboratory.add_Callable(&run, "--run", "./APPNAME", NLV);
         LaboratoryCmd.add_Callable(&_export, "--export", "export project to a folder", NLV);
+        LaboratoryCmd.add_Callable(&Add_at_Bin, "--add", "add project to CGP_LIB", NLV);
+        LaboratoryCmd.add_Callable(&BIN_at_this, "--import", "import project from CGP_LIB", NLV);
+        LaboratoryCmd.add_Callable(&listLib, "--list-lib", "list Libs in CGP_LIB", NLV);
         LaboratoryCmd.add_Callable(&list, "--list", "list project", NLV);
         //LaboratoryCmd.add_Callable(&_import, "--import", "import project here", NLV);
         // Laboratory.add_Callable(&build, "--add-git-dep", "add a git ", NLV);
@@ -940,7 +1001,7 @@ int main(int argc, char **argv)
         //sourcebuffer;
         //objbuffer;
         MF->load_into_Vector();
-        if (argc >= 3)
+        if (argc >= 2)
         {
                 for (int i = 0; i < argc; i++)
                 {

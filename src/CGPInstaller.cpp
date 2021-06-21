@@ -107,6 +107,10 @@ Paths->Alias="none";
             cout<<"Installed cgp to: "<<Paths->EA[Paths->current_index]->_Key<<endl;
             ofstream i("APath",ios::out);
             i<<Paths->EA[Paths->current_index]->_Key<<endl;
+            ofstream j("./include/USR.h",ios::out);
+
+            j<<"#define CGP_BIN \""<<Paths->EA[Paths->current_index]->_Key<<"\"";
+            j.close();
             i.close();
 
             system("stty cooked");
