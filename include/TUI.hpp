@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#ifndef RESET
 #define RESET "\033[0m"
 #define BLACK "\033[30m"              /* Black */
 #define RED "\033[31m"                /* Red */
@@ -189,3 +190,4 @@ MSTS_Vector*dvector;
     int MAXx;
     int MAXy;
 };
+#endif

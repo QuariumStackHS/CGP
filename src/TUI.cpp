@@ -430,8 +430,8 @@ void MasterView::Load(string Filename)
         myfile.close();
     }
 
-    else
-        cout << "Unable to Load file\"" << Filename << "\"" << endl;
+   // else
+        //cout << "Unable to Load file\"" << Filename << "\"" << endl;
 }
 dropdownlist::dropdownlist(int X, int Y)
 {

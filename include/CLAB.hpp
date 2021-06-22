@@ -4,10 +4,13 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <TUI.hpp>
 
 using namespace std;
-
-
+struct Deskrp{
+    View*V=new View();
+    int y;
+};
 template <class WildCard>
 class CLAB
 {
@@ -25,15 +28,40 @@ public:
     CLAB();
     void add_Callable(void *(Taddr)(char **, int, WildCard), string, string, WildCard);
     void run(string, char **, int);
-    void show_desk();
+    Deskrp* show_desk(Deskrp* Kp);
 
     WildCard get_Callable(void *(*Taddr)(char **, int, WildCard));
     WildCard get_Callable(string);
 };
+
+void show_Vec(Deskrp *K){
+MasterView* mf=new MasterView(MaxX,MaxY);
+mf->addView(K->V);
+K->V->render();
+mf->clear();
+mf->Render();
+
+mf->Display();
+}
+
 template <class WildCard>
-void show_desk(){
-for(int i=0;i<this->Switchs.size();i++)
-cout<<this->Switchs[i].Name<<" | "<< this->Switchs[i].Desk<<endl;
+Deskrp *CLAB<WildCard>::show_desk(Deskrp *Kp)
+{
+    //cout<<"etrn"<<endl;
+    //Deskrp K;
+    //MasterView *MF=new MasterView(MaxX,MaxY);
+    for (int i = 0; i < this->Switchs.size(); i++){
+        //cout<<this->Switchs[i].Name<<endl;
+        Kp->V->add_Horizon(GREEN+this->Switchs[i].Name,Kp->y,1);
+        Kp->V->add_Horizon(BLUE+this->Switchs[i].Desk+RESET,Kp->y,19);
+        Kp->y++;
+    }
+    //MF->clear();
+    //Kp->V->render();
+    //MF->Render();
+    //MF->Display();
+    //delete MF;
+    return Kp;
 }
 template <class WildCard>
 void CLAB<WildCard>::add_Callable(void *(Taddr)(char **, int, WildCard), string name, string desk, WildCard wcs)

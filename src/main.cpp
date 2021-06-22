@@ -272,8 +272,8 @@ string Get_Data(string Dependancy, string Key)
         }
 
         else
-               // cout << "Unable to Load Dependancy\"" << Dependancy << "\"" << endl;
-        return "";
+                // cout << "Unable to Load Dependancy\"" << Dependancy << "\"" << endl;
+                return "";
 }
 
 int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string thisprog)
@@ -706,7 +706,7 @@ string show_menu()
 }
 void *BIN_at_this(char **argb, int argc, MSTS_Vector *IN)
 {
-        string Dest=fs::current_path();
+        string Dest = fs::current_path();
         string import_Name;
         //bool nextis;
         for (int i = 0; i < argc; i++)
@@ -721,7 +721,7 @@ void *BIN_at_this(char **argb, int argc, MSTS_Vector *IN)
         {
                 recursive_mkdir(LibPath.c_str());
         }
-        fs::current_path(LibPath + import_Name+"/");
+        fs::current_path(LibPath + import_Name + "/");
         string cmd = "cgp " + import_Name + " --export " + Dest;
         //cout << cmd << endl;
         system(cmd.c_str());
@@ -747,13 +747,14 @@ void *Add_at_Bin(char **argb, int argc, MSTS_Vector *IN)
         system(cmd.c_str());
 }
 void *listLib(char **argb, int argc, MSTS_Vector *)
-{string LibPath = ((string)CGP_BIN) + ".CGP_LIB/";
+{
+        string LibPath = ((string)CGP_BIN) + ".CGP_LIB/";
         std::string path(LibPath);
         //std::string ext(".cgp");
         for (auto &p : fs::directory_iterator(path))
         {
                 //if (p.path().extension() == ext)
-                        std::cout << " \"" << p.path().stem().string() << "\" in ("<<p.path().string()<<")"<<endl;
+                std::cout << " \"" << p.path().stem().string() << "\" in (" << p.path().string() << ")" << endl;
         }
 }
 int main(int argc, char **argv)
@@ -768,16 +769,16 @@ int main(int argc, char **argv)
         }
         string path;
         vector<string> dirs;
-        
+
         split(argv[1], dirs, '/');
-        
+
         for (int j = 0; j < dirs.size() - 1; j++)
         {
                 path += dirs[j];
         }
         if (strcmp(path.c_str(), "") != 0)
                 fs::current_path(path.c_str());
-        
+
         if (!fs::is_directory(".cgp"))
         {
                 mkdir(".cgp/");
@@ -1001,16 +1002,35 @@ int main(int argc, char **argv)
         //sourcebuffer;
         //objbuffer;
         MF->load_into_Vector();
-        if (argc >= 2)
+        //cout<<(argv[1][0]!='-')<<" |"<<argv[1][0]<<endl;
+        if (argc==2){
+                argv[2]=new char();
+        }
+        bool haveto=1;
+        if ((argc >= 2))
         {
+                //cout<<(argv[1][0] == '-')<<endl;
+                if((argv[1][0] == '-')||(argv[2][0] == '-')){
+                        haveto=0;
                 for (int i = 0; i < argc; i++)
                 {
-                        LaboratoryCmd.run(argv[i], argv, argc);
-                        Laboratory.run(argv[i], argv, buildtype->current_index);
+                        if (strcmp(argv[i], "--help") != 0)
+                        {
+                                LaboratoryCmd.run(argv[i], argv, argc);
+                                Laboratory.run(argv[i], argv, buildtype->current_index);
+                        }
+                        else
+                        {
+                                //vector<Deskrp>K;
+                                //K.push_back();
+                             show_Vec(Laboratory.show_desk(LaboratoryCmd.show_desk(new Deskrp())));
+                        }
                 }
                 MF->Save(Fname);
+                }
+                
         }
-        else
+        if(argc==2&&haveto==1)
         {
                 system("stty raw");
                 while (1)
@@ -1597,4 +1617,5 @@ int main(int argc, char **argv)
                         I->add_Horizon(buffer, y, x);
                 }
         }
+        return 0;
 }

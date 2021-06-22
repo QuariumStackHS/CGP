@@ -13,5 +13,5 @@ int main (int argc, char **argv)
     printf ("columns %d\n", w.ws_col);
     return 0;  // make sure your main returns int
 }*/
-const int MaxX=36;
-const int MaxY=80;
+const int MaxX=38;
+const int MaxY=88;
