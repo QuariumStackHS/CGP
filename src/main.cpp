@@ -5,6 +5,7 @@
 this is an exemple of what you can do using TUI.hpp and TUI.cpp in this Repository
 
 */
+
 #include <CLAB.hpp>
 #include <TUI.hpp>
 #include <Keys.h>
@@ -17,6 +18,7 @@ this is an exemple of what you can do using TUI.hpp and TUI.cpp in this Reposito
 #include <Packtor.hpp>
 namespace fs = std::filesystem;
 #include <sstream>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
@@ -76,7 +78,16 @@ size_t split(const std::string &txt, std::vector<std::string> &strs, char ch)
 
         return strs.size();
 }
-
+int countsp(string i){
+        vector<string>kl;
+        int nbr=0;
+        split(i,kl,' ');
+        for(int j=0;j<kl.size();j++){
+                if((strcmp(kl[j].c_str(),""))!=0&&(strcmp(kl[j].c_str()," ")!=0))
+                nbr++;
+        }
+        return nbr;
+}
 char getch()
 {
         char buf = 0;
@@ -140,7 +151,6 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
                 }
         }*/
         checkSums->_Value = "";
-
         for (int i = 0; i < OBJs.size(); i++)
         {
                 if (!((strcmp(OBJs[i].c_str(), " ") == 0) || (strcmp(OBJs[i].c_str(), "") == 0)))
@@ -592,29 +602,41 @@ string show_menu()
         string Value;
         MasterView *MF = new MasterView(MaxX, MaxY);
         EditorView *Menu = new EditorView(1, 1);
+        EditorView *Legend= new EditorView(MaxX/2,1);
         EditorView *Menu_new = new EditorView(10, 14);
         Menu_new->add_MSTS(new MSTS("New project name", "", ""), 0);
         Menu_new->add_MSTS(new MSTS("=>", "", ""), 1);
 
         Menu->add_MSTS(new MSTS(">", ((string)BLUE) + "Create New" + RESET, ""), 0);
-
+        MF->addView(Legend);
+        Legend->add_MSTS(new MSTS("Project","none","Projectname"),0);
+        Legend->add_MSTS(new MSTS("press I to Add to","CGP_BIN","Projecti"),1);
+        
+        //string j;
+        
         MF->addView(Menu);
         std::string path(".cgp/");
         std::string ext(".cgp");
         int i = 1;
+        vector<string>ksd;
         for (auto &p : fs::recursive_directory_iterator(path))
         {
                 if (p.path().extension() == ext)
                 {
-                        Menu->add_MSTS(new MSTS(">", p.path().stem().string(), ""), i);
+                        Menu->add_MSTS(new MSTS(">", p.path().stem().string(), ""), i);ksd.push_back(p.path().stem().string());
                         i++;
                 }
                 //std::cout<<"\t" << p.path().stem().string()<< ".cgp at .cgp/\n\n";
         }
+        Legend->add_MSTS(new MSTS("Dependancys",Get_Data(ksd[i-1],"source.Deps"),"Deps"),2);
+        Legend->add_MSTS(new MSTS("BuildType",Get_Data(ksd[i-1],"source.Deps"),"build"),3);
+        Legend->add_MSTS(new MSTS("In CGP_BIN?","","build"),4);
         system("stty raw");
         char ch;
+        bool exp;
         while (ch != 27)
-        {
+        {//cout<<(int)ch<<endl;
+
 
                 if (Lock == 1)
                 {
@@ -635,7 +657,14 @@ string show_menu()
                         Menu_new->render();
                         MF->Display();
                 }
-                else if ((ch == Down) && (Menu->current_index < Menu->Values.size()) && (Lock == 0))
+                else if((int)ch==(int)105){
+                        //cout<<"exp"<<endl;
+                        exp=1;
+                        string cmd="cgp "+ksd[Menu->current_index-1]+" --add";
+                        system(cmd.c_str());
+                        
+                }
+                else if ((ch == Down) && (Menu->current_index < Menu->Values.size()-1) && (Lock == 0))
                 {
 
                         Menu->current_index++;
@@ -691,6 +720,51 @@ string show_menu()
                         system("stty cooked");
                         system("clear");
                 }
+                if(Menu->current_index>=1){
+                        Legend->Values[0]->_Value=Menu->Values[Menu->current_index]->_Value;
+                        if (exp==0)
+                        Legend->Values[1]->_Value="CGP_BIN/"+Legend->Values[0]->_Value;
+                        else
+                        Legend->Values[1]->_Value="CGP_BIN/"+Legend->Values[0]->_Value+BLUE+"(exported)"+RESET;
+                        string j=Get_Data((char*)ksd[Menu->current_index-1].c_str(),"source.Deps");
+                        j+="("+to_string(countsp(j))+")";
+                        string k=Get_Data((char*)ksd[Menu->current_index-1].c_str(),"Build.Type");
+                        
+                        switch(stoi(k)){
+                                case 1:
+                                        Legend->Values[3]->_Value="Dynamic Lib";
+                                break;
+
+                                case 2:
+                                        Legend->Values[3]->_Value="Static Lib";
+                                break;
+
+                                case 0:
+                                        Legend->Values[3]->_Value="Executable";
+                                break;
+
+                                default:
+
+                                break;
+                        }
+                       //cout<<CGP_BIN+".CGP_LIB/"+ksd[Menu->current_index-1]+'/'+".cgp/"+ksd[Menu->current_index-1]+".cgp"<<exists(CGP_BIN+".CGP_LIB/"+ksd[Menu->current_index-1]+'/'+".cgp/"+ksd[Menu->current_index-1]+".cgp")<<endl;
+                        switch(exists(((string)CGP_BIN)+".CGP_LIB/"+ksd[Menu->current_index-1]+'/'+".cgp/"+ksd[Menu->current_index-1]+".cgp")){
+                                case 0:
+                                Legend->Values[4]->_Value="No";
+                                break;
+
+                                case 1:
+                                Legend->Values[4]->_Value="Yes";
+                                break;
+                        }
+                        //cout<<j<<endl;
+                        Legend->Values[2]->_Value=j;
+                        
+                        exp=0;
+                }
+                                        //Legend->clear();
+                        Legend->render();
+                system("clear");
                 MF->clear();
                 Menu->render();
                 MF->Render();

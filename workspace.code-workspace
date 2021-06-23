@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "./include"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"iosfwd": "cpp",
+			"filesystem": "cpp",
+			"vector": "cpp",
+			"iterator": "cpp"
+		}
+	}
+}
