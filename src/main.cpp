@@ -78,13 +78,15 @@ size_t split(const std::string &txt, std::vector<std::string> &strs, char ch)
 
         return strs.size();
 }
-int countsp(string i){
-        vector<string>kl;
-        int nbr=0;
-        split(i,kl,' ');
-        for(int j=0;j<kl.size();j++){
-                if((strcmp(kl[j].c_str(),""))!=0&&(strcmp(kl[j].c_str()," ")!=0))
-                nbr++;
+int countsp(string i)
+{
+        vector<string> kl;
+        int nbr = 0;
+        split(i, kl, ' ');
+        for (int j = 0; j < kl.size(); j++)
+        {
+                if ((strcmp(kl[j].c_str(), "")) != 0 && (strcmp(kl[j].c_str(), " ") != 0))
+                        nbr++;
         }
         return nbr;
 }
@@ -117,7 +119,22 @@ char getch()
 
 
 */
-
+void mkdir(const char *p)
+{
+        system((((string) "mkdir ") + p + " &>/dev/null").c_str());
+}
+void recursive_mkdir(const char *p)
+{
+        vector<string> kl;
+        vector<string> Steps;
+        split(p, kl, '/');
+        string current;
+        for (int i = 0; i < kl.size(); i++)
+        {
+                current += kl[i] + '/';
+                mkdir(current.c_str());
+        }
+}
 int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS *addsw)
 {
         //cout<<addsw->_Value<<endl;
@@ -131,6 +148,17 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
         split(OBJ->_Value, OBJs, ' ');
         split(SRC->_Value, SRCs, ' ');
         split(checkSums->_Value, Sha, ' ');
+        for (int i = 0; i < OBJs.size(); i++)
+        {
+                vector<string> Paths;
+                split(OBJs[i], Paths, '/');
+                string fpa;
+                for (int j = 0; j < Paths.size() - 1; j++)
+                {
+                        fpa += Paths[j] + '/';
+                }
+                recursive_mkdir(fpa.c_str());
+        }
         //for(int i=0;OBJ)
         string includestring;
         string Checks;
@@ -437,22 +465,6 @@ void *run(char **argb, int argc, MSTS_Vector *IN)
         string cmd = "./" + IN->get_from_alias("Config.Exe")->_Value;
         system(cmd.c_str());
 }
-void mkdir(const char *p)
-{
-        system((((string) "mkdir ") + p + " &>/dev/null").c_str());
-}
-void recursive_mkdir(const char *p)
-{
-        vector<string> kl;
-        vector<string> Steps;
-        split(p, kl, '/');
-        string current;
-        for (int i = 0; i < kl.size(); i++)
-        {
-                current += kl[i] + '/';
-                mkdir(current.c_str());
-        }
-}
 
 void *list(char **argb, int argc, MSTS_Vector *)
 {
@@ -602,41 +614,53 @@ string show_menu()
         string Value;
         MasterView *MF = new MasterView(MaxX, MaxY);
         EditorView *Menu = new EditorView(1, 1);
-        EditorView *Legend= new EditorView(MaxX/2,1);
+        EditorView *Legend = new EditorView(MaxX / 2, 1);
         EditorView *Menu_new = new EditorView(10, 14);
+
         Menu_new->add_MSTS(new MSTS("New project name", "", ""), 0);
         Menu_new->add_MSTS(new MSTS("=>", "", ""), 1);
 
         Menu->add_MSTS(new MSTS(">", ((string)BLUE) + "Create New" + RESET, ""), 0);
         MF->addView(Legend);
-        Legend->add_MSTS(new MSTS("Project","none","Projectname"),0);
-        Legend->add_MSTS(new MSTS("press I to Add to","CGP_BIN","Projecti"),1);
-        
+
         //string j;
-        
+
         MF->addView(Menu);
         std::string path(".cgp/");
         std::string ext(".cgp");
         int i = 1;
-        vector<string>ksd;
-        for (auto &p : fs::recursive_directory_iterator(path))
+        vector<string> ksd;
+        try
         {
-                if (p.path().extension() == ext)
+                for (auto &p : fs::recursive_directory_iterator(path))
                 {
-                        Menu->add_MSTS(new MSTS(">", p.path().stem().string(), ""), i);ksd.push_back(p.path().stem().string());
-                        i++;
+                        if (p.path().extension() == ext)
+                        {
+                                Menu->add_MSTS(new MSTS(">", p.path().stem().string(), ""), i);
+                                ksd.push_back(p.path().stem().string());
+                                i++;
+                        }
+
+                        //std::cout<<"\t" << p.path().stem().string()<< ".cgp at .cgp/\n\n";
                 }
-                //std::cout<<"\t" << p.path().stem().string()<< ".cgp at .cgp/\n\n";
+                        Legend->add_MSTS(new MSTS("Project", "none", "Projectname"), 0);
+                        Legend->add_MSTS(new MSTS("press I to Add to", "CGP_BIN", "Projecti"), 1);
+                        Legend->add_MSTS(new MSTS("press R to Remove from", "CGP_BIN", "Projectj"), 2);
+                        Legend->add_MSTS(new MSTS("Dependancys", Get_Data(ksd[i - 1], "source.Deps"), "Deps"), 3);
+
+                        Legend->add_MSTS(new MSTS("BuildType", Get_Data(ksd[i - 1], "source.Deps"), "build"), 4);
+                        Legend->add_MSTS(new MSTS("In CGP_BIN?", "", "build"), 5);
         }
-        Legend->add_MSTS(new MSTS("Dependancys",Get_Data(ksd[i-1],"source.Deps"),"Deps"),2);
-        Legend->add_MSTS(new MSTS("BuildType",Get_Data(ksd[i-1],"source.Deps"),"build"),3);
-        Legend->add_MSTS(new MSTS("In CGP_BIN?","","build"),4);
+        catch (...)
+        {
+        }
+
         system("stty raw");
         char ch;
         bool exp;
+        bool rmv;
         while (ch != 27)
-        {//cout<<(int)ch<<endl;
-
+        { //cout<<(int)ch<<endl;
 
                 if (Lock == 1)
                 {
@@ -657,14 +681,23 @@ string show_menu()
                         Menu_new->render();
                         MF->Display();
                 }
-                else if((int)ch==(int)105){
+                else if ((int)ch == (int)105)
+                {
                         //cout<<"exp"<<endl;
-                        exp=1;
-                        string cmd="cgp "+ksd[Menu->current_index-1]+" --add";
+                        exp = 1;
+                        string cmd = "cgp " + ksd[Menu->current_index - 1] + " --add";
                         system(cmd.c_str());
-                        
                 }
-                else if ((ch == Down) && (Menu->current_index < Menu->Values.size()-1) && (Lock == 0))
+                else if ((int)ch == (int)'r')
+                {
+                        //cout<<"exp"<<endl;
+                        fs::remove_all(((string)CGP_BIN) + ".CGP_LIB/" + ksd[Menu->current_index - 1]);
+                        //cout<<((string)CGP_BIN)+".CGP_LIB/"+ksd[Menu->current_index-1]<<endl;
+                        rmv = 1;
+                        //string cmd="cgp "+ksd[Menu->current_index-1]+" --add";
+                        //system(cmd.c_str());
+                }
+                else if ((ch == Down) && (Menu->current_index < Menu->Values.size() - 1) && (Lock == 0))
                 {
 
                         Menu->current_index++;
@@ -720,50 +753,57 @@ string show_menu()
                         system("stty cooked");
                         system("clear");
                 }
-                if(Menu->current_index>=1){
-                        Legend->Values[0]->_Value=Menu->Values[Menu->current_index]->_Value;
-                        if (exp==0)
-                        Legend->Values[1]->_Value="CGP_BIN/"+Legend->Values[0]->_Value;
+                if (Menu->current_index >= 1)
+                {
+                        Legend->Values[0]->_Value = Menu->Values[Menu->current_index]->_Value;
+                        if (exp == 0)
+                                Legend->Values[1]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value;
                         else
-                        Legend->Values[1]->_Value="CGP_BIN/"+Legend->Values[0]->_Value+BLUE+"(exported)"+RESET;
-                        string j=Get_Data((char*)ksd[Menu->current_index-1].c_str(),"source.Deps");
-                        j+="("+to_string(countsp(j))+")";
-                        string k=Get_Data((char*)ksd[Menu->current_index-1].c_str(),"Build.Type");
-                        
-                        switch(stoi(k)){
-                                case 1:
-                                        Legend->Values[3]->_Value="Dynamic Lib";
+                                Legend->Values[1]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value + BLUE + "(exported)" + RESET;
+                        string j = Get_Data((char *)ksd[Menu->current_index - 1].c_str(), "source.Deps");
+                        j += "(" + to_string(countsp(j)) + ")";
+                        string k = Get_Data((char *)ksd[Menu->current_index - 1].c_str(), "Build.Type");
+
+                        switch (stoi(k))
+                        {
+                        case 1:
+                                Legend->Values[4]->_Value = "Dynamic Lib";
                                 break;
 
-                                case 2:
-                                        Legend->Values[3]->_Value="Static Lib";
+                        case 2:
+                                Legend->Values[4]->_Value = "Static Lib";
                                 break;
 
-                                case 0:
-                                        Legend->Values[3]->_Value="Executable";
+                        case 0:
+                                Legend->Values[4]->_Value = "Executable";
                                 break;
 
-                                default:
+                        default:
 
                                 break;
                         }
-                       //cout<<CGP_BIN+".CGP_LIB/"+ksd[Menu->current_index-1]+'/'+".cgp/"+ksd[Menu->current_index-1]+".cgp"<<exists(CGP_BIN+".CGP_LIB/"+ksd[Menu->current_index-1]+'/'+".cgp/"+ksd[Menu->current_index-1]+".cgp")<<endl;
-                        switch(exists(((string)CGP_BIN)+".CGP_LIB/"+ksd[Menu->current_index-1]+'/'+".cgp/"+ksd[Menu->current_index-1]+".cgp")){
-                                case 0:
-                                Legend->Values[4]->_Value="No";
+                        //cout<<CGP_BIN+".CGP_LIB/"+ksd[Menu->current_index-1]+'/'+".cgp/"+ksd[Menu->current_index-1]+".cgp"<<exists(CGP_BIN+".CGP_LIB/"+ksd[Menu->current_index-1]+'/'+".cgp/"+ksd[Menu->current_index-1]+".cgp")<<endl;
+                        switch (exists(((string)CGP_BIN) + ".CGP_LIB/" + ksd[Menu->current_index - 1] + '/' + ".cgp/" + ksd[Menu->current_index - 1] + ".cgp"))
+                        {
+                        case 0:
+                                Legend->Values[5]->_Value = "No";
                                 break;
 
-                                case 1:
-                                Legend->Values[4]->_Value="Yes";
+                        case 1:
+                                Legend->Values[5]->_Value = "Yes";
                                 break;
                         }
                         //cout<<j<<endl;
-                        Legend->Values[2]->_Value=j;
-                        
-                        exp=0;
+                        Legend->Values[3]->_Value = j;
+                        if (rmv)
+                                Legend->Values[2]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value + RED + "(removed)" + RESET;
+                        else
+                                Legend->Values[2]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value;
+                        rmv = 0;
+                        exp = 0;
                 }
-                                        //Legend->clear();
-                        Legend->render();
+                //Legend->clear();
+                Legend->render();
                 system("clear");
                 MF->clear();
                 Menu->render();
@@ -835,6 +875,11 @@ int main(int argc, char **argv)
 {
         string Fname = ".cgp/";
         bool frommenu = 0;
+        if (!fs::is_directory(".cgp"))
+        {
+                mkdir(".cgp/");
+        }
+
         if (argc <= 1)
         {
                 show_menu(); //<<endl;
@@ -852,11 +897,6 @@ int main(int argc, char **argv)
         }
         if (strcmp(path.c_str(), "") != 0)
                 fs::current_path(path.c_str());
-
-        if (!fs::is_directory(".cgp"))
-        {
-                mkdir(".cgp/");
-        }
 
         CLAB<MSTS_Vector *> Laboratory;
         CLAB<MSTS_Vector *> LaboratoryCmd;
@@ -1077,34 +1117,35 @@ int main(int argc, char **argv)
         //objbuffer;
         MF->load_into_Vector();
         //cout<<(argv[1][0]!='-')<<" |"<<argv[1][0]<<endl;
-        if (argc==2){
-                argv[2]=new char();
+        if (argc == 2)
+        {
+                argv[2] = new char();
         }
-        bool haveto=1;
+        bool haveto = 1;
         if ((argc >= 2))
         {
                 //cout<<(argv[1][0] == '-')<<endl;
-                if((argv[1][0] == '-')||(argv[2][0] == '-')){
-                        haveto=0;
-                for (int i = 0; i < argc; i++)
+                if ((argv[1][0] == '-') || (argv[2][0] == '-'))
                 {
-                        if (strcmp(argv[i], "--help") != 0)
+                        haveto = 0;
+                        for (int i = 0; i < argc; i++)
                         {
-                                LaboratoryCmd.run(argv[i], argv, argc);
-                                Laboratory.run(argv[i], argv, buildtype->current_index);
+                                if (strcmp(argv[i], "--help") != 0)
+                                {
+                                        LaboratoryCmd.run(argv[i], argv, argc);
+                                        Laboratory.run(argv[i], argv, buildtype->current_index);
+                                }
+                                else
+                                {
+                                        //vector<Deskrp>K;
+                                        //K.push_back();
+                                        show_Vec(Laboratory.show_desk(LaboratoryCmd.show_desk(new Deskrp())));
+                                }
                         }
-                        else
-                        {
-                                //vector<Deskrp>K;
-                                //K.push_back();
-                             show_Vec(Laboratory.show_desk(LaboratoryCmd.show_desk(new Deskrp())));
-                        }
+                        MF->Save(Fname);
                 }
-                MF->Save(Fname);
-                }
-                
         }
-        if(argc==2&&haveto==1)
+        if (argc == 2 && haveto == 1)
         {
                 system("stty raw");
                 while (1)

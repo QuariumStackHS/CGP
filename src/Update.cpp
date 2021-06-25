@@ -27,7 +27,7 @@ int main()
     else{
         cout<<"Cant find previous installation Path exiting"<<endl;exit(0);
     }
-    string cmd="cgp this --force --build ; sudo cp .cgp/Bin/cgp "+oldins+"cgp";
+    string cmd="cgp cgp --force --build ; sudo cp .cgp/Bin/cgp "+oldins+"cgp";
             system(cmd.c_str());
             //string cmdc="sudo cp .cgp/Bin/AES_Lib.so "+oldins+"AES_Lib.so";
             //system(cmdc.c_str());
