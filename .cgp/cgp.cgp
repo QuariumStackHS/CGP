@@ -1,6 +1,6 @@
 
-source.Checksum_sha1 = '42cdf43e60f1d984051016347dec13949daa8d37 '
-thiscfg = '.cgp/this.cgp'
+source.Checksum_sha1 = 'ad35d1f708f34e45ba8f84e64e9a2e32cd91b23c '
+thiscfg = '.cgp/cgp.cgp'
 exe = 'cgp'
 cwd = '/Users/christopherclement/Documents/TUI-Lib'
 compile.Switchs = ''

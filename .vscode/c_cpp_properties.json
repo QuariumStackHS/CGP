@@ -4,6 +4,7 @@
             "name": "OSX",
             "includePath": [
                 "./include/",
+                "${workspaceFolder}/include/",
                 "${default}"
             ],
             "defines": [

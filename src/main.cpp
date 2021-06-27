@@ -35,13 +35,14 @@ string as_cgp(char *file)
                 {
                         isinext = 1;
                 }
-                if (isinext)
+                else if (isinext)
                 {
                         ext.push_back(file[i]);
                 }
                 i++;
         }
-        if (strcmp(ext.c_str(), ".cgp") == 0)
+
+        if (strcmp(ext.c_str(), "cgp") == 0)
                 return file;
         return ((((string)file) + ".cgp"));
 }
@@ -413,7 +414,7 @@ void CopyRecursive(const char *src, const char *target) noexcept
         }
         catch (std::exception &e)
         {
-                std::cout << e.what();
+                //std::cout << e.what();
         }
 }
 DepTree *buildTree(string RGPFILE)
@@ -567,7 +568,7 @@ void *_export(char **argb, int argc, MSTS_Vector *IN)
                         split(Objfolder[i], each, '/');
                         for (int j = 0; j <= Objfolder.size() - 1; j++)
                                 jk += each[j] + '/';
-                        cout << jk << endl;
+                        //cout << jk << endl;
                         recursive_mkdir((exportPath + '/' + jk).c_str());
                 }
         }
@@ -613,9 +614,16 @@ string show_menu()
         bool Lock = 0;
         string Value;
         MasterView *MF = new MasterView(MaxX, MaxY);
-        EditorView *Menu = new EditorView(1, 1);
+        EditorView *Menu = new EditorView(2, 1);
+        EditorView *Menu_imp = new EditorView(2, 1);
+        EditorView *Legend_imp = new EditorView(MaxX / 2, 1);
         EditorView *Legend = new EditorView(MaxX / 2, 1);
         EditorView *Menu_new = new EditorView(10, 14);
+        vector<string> kgb;
+        kgb.push_back("Export to");
+        kgb.push_back("Import from");
+
+        vign *SEA = new vign(kgb, 1, 1);
 
         Menu_new->add_MSTS(new MSTS("New project name", "", ""), 0);
         Menu_new->add_MSTS(new MSTS("=>", "", ""), 1);
@@ -626,10 +634,16 @@ string show_menu()
         //string j;
 
         MF->addView(Menu);
+        MF->addView(SEA);
+        Menu_imp->Visible = 0;
+        Legend_imp->Visible = 0;
+        MF->addView(Legend_imp);
+        MF->addView(Menu_imp);
         std::string path(".cgp/");
         std::string ext(".cgp");
         int i = 1;
         vector<string> ksd;
+        vector<string> ksd_imp;
         try
         {
                 for (auto &p : fs::recursive_directory_iterator(path))
@@ -643,6 +657,8 @@ string show_menu()
 
                         //std::cout<<"\t" << p.path().stem().string()<< ".cgp at .cgp/\n\n";
                 }
+                if (i >= 2)
+                {
                         Legend->add_MSTS(new MSTS("Project", "none", "Projectname"), 0);
                         Legend->add_MSTS(new MSTS("press I to Add to", "CGP_BIN", "Projecti"), 1);
                         Legend->add_MSTS(new MSTS("press R to Remove from", "CGP_BIN", "Projectj"), 2);
@@ -650,164 +666,244 @@ string show_menu()
 
                         Legend->add_MSTS(new MSTS("BuildType", Get_Data(ksd[i - 1], "source.Deps"), "build"), 4);
                         Legend->add_MSTS(new MSTS("In CGP_BIN?", "", "build"), 5);
+                }
         }
         catch (...)
         {
         }
+        i = 0;
+        try
+        {
+                string LibPath = ((string)CGP_BIN) + ".CGP_LIB/";
+                std::string path(LibPath);
 
+                //std::string ext(".cgp");
+                for (auto &p : fs::directory_iterator(path))
+                {
+                        //if (p.path().extension() == ext)
+                        Menu_imp->add_MSTS(new MSTS(">", p.path().stem().string(), ""), i);
+                        ksd_imp.push_back(p.path().stem().string());
+                        i++;
+                        //std::cout << " \"" << p.path().stem().string() << "\" in (" << p.path().string() << ")" << endl;
+                }
+        }
+        catch (...)
+        {
+        }
         system("stty raw");
         char ch;
         bool exp;
         bool rmv;
         while (ch != 27)
         { //cout<<(int)ch<<endl;
-
-                if (Lock == 1)
+                if ((ch == Left) && (Lock == 0) && (SEA->current_index > 0))
                 {
+                        SEA->current_index--;
+                }
+                else if ((ch == Right) && (Lock == 0) && (SEA->current_index < SEA->Comb.size() - 1))
+                {
+                        SEA->current_index++;
+                }
 
-                        if (((char)ch == (char)'\r'))
+                if (SEA->current_index == 0)
+                {
+                        Legend->Visible = 1;
+                        Menu->Visible = 1;
+                        Menu_imp->Visible = 0;
+                        if (Lock == 1)
                         {
-                                Lock = 0;
-                                Menu_new->clear();
+
+                                if (((char)ch == (char)'\r'))
+                                {
+                                        Lock = 0;
+                                        Menu_new->clear();
+                                        MF->Render();
+                                        MF->RemoveView(Menu_new);
+                                        MF->clear();
+                                }
+                                else
+                                {
+                                        Menu_new->Values[0]->_Value += (char)ch;
+                                }
                                 MF->Render();
-                                MF->RemoveView(Menu_new);
-                                MF->clear();
+                                Menu_new->render();
+                                MF->Display();
                         }
-                        else
+                        else if ((int)ch == (int)105)
                         {
-                                Menu_new->Values[0]->_Value += (char)ch;
+                                //cout<<"exp"<<endl;
+                                exp = 1;
+                                string cmd = "cgp " + ksd[Menu->current_index - 1] + " --add";
+                                system(cmd.c_str());
                         }
-                        MF->Render();
-                        Menu_new->render();
-                        MF->Display();
-                }
-                else if ((int)ch == (int)105)
-                {
-                        //cout<<"exp"<<endl;
-                        exp = 1;
-                        string cmd = "cgp " + ksd[Menu->current_index - 1] + " --add";
-                        system(cmd.c_str());
-                }
-                else if ((int)ch == (int)'r')
-                {
-                        //cout<<"exp"<<endl;
-                        fs::remove_all(((string)CGP_BIN) + ".CGP_LIB/" + ksd[Menu->current_index - 1]);
-                        //cout<<((string)CGP_BIN)+".CGP_LIB/"+ksd[Menu->current_index-1]<<endl;
-                        rmv = 1;
-                        //string cmd="cgp "+ksd[Menu->current_index-1]+" --add";
-                        //system(cmd.c_str());
-                }
-                else if ((ch == Down) && (Menu->current_index < Menu->Values.size() - 1) && (Lock == 0))
-                {
-
-                        Menu->current_index++;
-                }
-                else if ((ch == UP) && (Menu->current_index > 0) && (Lock == 0))
-                {
-                        Menu->current_index--;
-                }
-                else if ((ch == UP) && (Menu->current_index == -1) && (Lock == 0))
-                {
-                        Menu_new->current_index = 0;
-                        MF->Render();
-                        Menu_new->render();
-                        MF->Display();
-                }
-                else if ((ch == Down) && (Menu->current_index == -1) && (Lock == 0))
-                {
-
-                        Menu_new->current_index = 1;
-                        MF->Render();
-                        Menu_new->render();
-                        MF->Display();
-                }
-                else if (ch == 13 && (Lock == 0))
-                {
-                        if (Menu->current_index > 0)
+                        else if ((int)ch == (int)'r')
                         {
-                                Value = (Menu->Values[Menu->current_index]->_Value);
-                                //cout<<Value<<endl;
-                                ch = '\n';
+                                //cout<<"exp"<<endl;
+                                fs::remove_all(((string)CGP_BIN) + ".CGP_LIB/" + ksd[Menu->current_index - 1]);
+                                //cout<<((string)CGP_BIN)+".CGP_LIB/"+ksd[Menu->current_index-1]<<endl;
+                                rmv = 1;
+                                //string cmd="cgp "+ksd[Menu->current_index-1]+" --add";
+                                //system(cmd.c_str());
+                        }
+                        else if ((ch == Down) && (Menu->current_index < Menu->Values.size() - 1) && (Lock == 0))
+                        {
+
+                                Menu->current_index++;
+                        }
+                        else if ((ch == UP) && (Menu->current_index > 0) && (Lock == 0))
+                        {
+                                Menu->current_index--;
+                        }
+                        else if ((ch == UP) && (Menu->current_index == -1) && (Lock == 0))
+                        {
+                                Menu_new->current_index = 0;
+                                MF->Render();
+                                Menu_new->render();
+                                MF->Display();
+                        }
+                        else if ((ch == Down) && (Menu->current_index == -1) && (Lock == 0))
+                        {
+
+                                Menu_new->current_index = 1;
+                                MF->Render();
+                                Menu_new->render();
+                                MF->Display();
+                        }
+                        else if (ch == 13 && (Lock == 0))
+                        {
+                                if (Menu->current_index > 0)
+                                {
+                                        Value = (Menu->Values[Menu->current_index]->_Value);
+                                        //cout<<Value<<endl;
+                                        ch = '\n';
+                                        system("stty cooked");
+                                        string v = "cgp " + Value;
+                                        system(v.c_str());
+                                        system("stty raw");
+                                }
+                                else if (Menu->current_index == -1)
+                                {
+                                        Value = (Menu_new->Values[0]->_Value);
+                                        system("stty cooked");
+                                        string v = "cgp " + Value;
+                                        system(v.c_str());
+                                        system("stty raw");
+                                }
+                                else
+                                {
+                                        MF->addView(Menu_new);
+                                        Lock = 1;
+                                        Menu->current_index = -1;
+                                }
+                        }
+                        else if (ch == 27)
+                        {
                                 system("stty cooked");
-                                string v = "cgp " + Value;
-                                system(v.c_str());
-                                system("stty raw");
+                                system("clear");
                         }
-                        else if (Menu->current_index == -1)
+                        if (Menu->current_index >= 1)
                         {
-                                Value = (Menu_new->Values[0]->_Value);
+                                Legend->Values[0]->_Value = Menu->Values[Menu->current_index]->_Value;
+                                if (exp == 0)
+                                        Legend->Values[1]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value;
+                                else
+                                        Legend->Values[1]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value + BLUE + "(exported)" + RESET;
+                                string j = Get_Data((char *)ksd[Menu->current_index - 1].c_str(), "source.Deps");
+                                j += "(" + to_string(countsp(j)) + ")";
+                                string k = Get_Data((char *)ksd[Menu->current_index - 1].c_str(), "Build.Type");
+                                int kfbg = -1;
+                                try
+                                {
+                                        kfbg = stoi(k);
+                                }
+                                catch (...)
+                                {
+                                }
+                                switch (kfbg)
+                                {
+                                case 1:
+                                        Legend->Values[4]->_Value = "Dynamic Lib";
+                                        break;
+
+                                case 2:
+                                        Legend->Values[4]->_Value = "Static Lib";
+                                        break;
+
+                                case 0:
+                                        Legend->Values[4]->_Value = "Executable";
+                                        break;
+
+                                default:
+                                        Legend->Values[4]->_Value = "Unknown";
+                                        break;
+                                }
+                                //cout<<((string)CGP_BIN) + ".CGP_LIB/" + ksd[Menu->current_index - 1] + '/' + ".cgp/" + ksd[Menu->current_index - 1] + ".cgp"<<endl;
+                                switch (exists(((string)CGP_BIN) + ".CGP_LIB/" + ksd[Menu->current_index - 1] + '/' + ".cgp/" + ksd[Menu->current_index - 1] + ".cgp"))
+                                {
+                                case 0:
+                                        Legend->Values[5]->_Value = "No";
+                                        break;
+
+                                case 1:
+                                        Legend->Values[5]->_Value = "Yes";
+                                        break;
+                                }
+                                //cout<<j<<endl;
+                                Legend->Values[3]->_Value = j;
+                                if (rmv)
+                                        Legend->Values[2]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value + RED + "(removed)" + RESET;
+                                else
+                                        Legend->Values[2]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value;
+                                rmv = 0;
+                                exp = 0;
+                        }
+                }
+                else if (SEA->current_index == 1)
+                {
+                        Legend->Visible = 0;
+                        Menu->Visible = 0;
+                        Menu_imp->Visible = 1;
+                        if ((int)ch == (int)105)
+                        {
+                                //cout<<"exp"<<endl;
+                                exp = 1;
+                                string cmd = "cgp " + ksd_imp[Menu_imp->current_index] + " --import";
+                                system(cmd.c_str());
+                        }
+                        else if ((int)ch == (int)'r')
+                        {
+                                //cout<<"exp"<<endl;
+                                fs::remove_all(((string)CGP_BIN) + ".CGP_LIB/" + ksd_imp[Menu_imp->current_index]);
+                                //cout<<((string)CGP_BIN)+".CGP_LIB/"+ksd[Menu->current_index-1]<<endl;
+                                rmv = 1;
+                                //string cmd="cgp "+ksd[Menu->current_index-1]+" --add";
+                                //system(cmd.c_str());
+                        }
+                        else if ((ch == Down) && (Menu_imp->current_index < Menu_imp->Values.size() - 1) && (Lock == 0))
+                        {
+
+                                Menu_imp->current_index++;
+                        }
+                        else if ((ch == UP) && (Menu_imp->current_index > 0) && (Lock == 0))
+                        {
+                                Menu_imp->current_index--;
+                        }
+                        else if (ch == 27)
+                        {
                                 system("stty cooked");
-                                string v = "cgp " + Value;
-                                system(v.c_str());
-                                system("stty raw");
-                        }
-                        else
-                        {
-                                MF->addView(Menu_new);
-                                Lock = 1;
-                                Menu->current_index = -1;
+                                system("clear");
                         }
                 }
-                else if (ch == 27)
-                {
-                        system("stty cooked");
-                        system("clear");
-                }
-                if (Menu->current_index >= 1)
-                {
-                        Legend->Values[0]->_Value = Menu->Values[Menu->current_index]->_Value;
-                        if (exp == 0)
-                                Legend->Values[1]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value;
-                        else
-                                Legend->Values[1]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value + BLUE + "(exported)" + RESET;
-                        string j = Get_Data((char *)ksd[Menu->current_index - 1].c_str(), "source.Deps");
-                        j += "(" + to_string(countsp(j)) + ")";
-                        string k = Get_Data((char *)ksd[Menu->current_index - 1].c_str(), "Build.Type");
 
-                        switch (stoi(k))
-                        {
-                        case 1:
-                                Legend->Values[4]->_Value = "Dynamic Lib";
-                                break;
-
-                        case 2:
-                                Legend->Values[4]->_Value = "Static Lib";
-                                break;
-
-                        case 0:
-                                Legend->Values[4]->_Value = "Executable";
-                                break;
-
-                        default:
-
-                                break;
-                        }
-                        //cout<<CGP_BIN+".CGP_LIB/"+ksd[Menu->current_index-1]+'/'+".cgp/"+ksd[Menu->current_index-1]+".cgp"<<exists(CGP_BIN+".CGP_LIB/"+ksd[Menu->current_index-1]+'/'+".cgp/"+ksd[Menu->current_index-1]+".cgp")<<endl;
-                        switch (exists(((string)CGP_BIN) + ".CGP_LIB/" + ksd[Menu->current_index - 1] + '/' + ".cgp/" + ksd[Menu->current_index - 1] + ".cgp"))
-                        {
-                        case 0:
-                                Legend->Values[5]->_Value = "No";
-                                break;
-
-                        case 1:
-                                Legend->Values[5]->_Value = "Yes";
-                                break;
-                        }
-                        //cout<<j<<endl;
-                        Legend->Values[3]->_Value = j;
-                        if (rmv)
-                                Legend->Values[2]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value + RED + "(removed)" + RESET;
-                        else
-                                Legend->Values[2]->_Value = "CGP_BIN/" + Legend->Values[0]->_Value;
-                        rmv = 0;
-                        exp = 0;
-                }
                 //Legend->clear();
                 Legend->render();
                 system("clear");
                 MF->clear();
                 Menu->render();
+                SEA->render();
+                Menu_imp->render();
                 MF->Render();
+
                 Menu_new->render();
                 MF->Display();
                 ch = getchar();
