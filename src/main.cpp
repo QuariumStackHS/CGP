@@ -924,6 +924,8 @@ void *BIN_at_this(char **argb, int argc, MSTS_Vector *IN)
                 if (strcmp(argb[i], "--import") == 0)
                         //nextis = 1;
                         import_Name = argb[i - 1];
+
+                        
                 //else if (nextis)
         }
         string LibPath = ((string)CGP_BIN) + ".CGP_LIB/";
@@ -967,6 +969,39 @@ void *listLib(char **argb, int argc, MSTS_Vector *)
                 std::cout << " \"" << p.path().stem().string() << "\" in (" << p.path().string() << ")" << endl;
         }
 }
+void *Install(char **argb, int argc, MSTS_Vector *)
+{       string import_Name;
+        for (int i = 0; i < argc; i++)
+        {
+                if (strcmp(argb[i], "--install") == 0)
+                        //nextis = 1;
+                        import_Name = argb[i - 1];
+                //else if (nextis)
+        }
+        string Src=Get_Data(import_Name,"Config.Exe");
+        CopyRecursive(Src.c_str(),CGP_BIN);
+        cout<<GREEN<<"installed: "<<BLUE<<import_Name<<GREEN<<" in "<<YELLOW<<CGP_BIN<<RESET<<"!"<<endl;
+        //std::string ext(".cgp");
+
+}
+void *UnInstall(char **argb, int argc, MSTS_Vector *)
+{       string import_Name;
+        for (int i = 0; i < argc; i++)
+        {
+                if (strcmp(argb[i], "--uninstall") == 0)
+                        //nextis = 1;
+                        import_Name = argb[i - 1];
+                //else if (nextis)
+        }
+        string Src=Get_Data(import_Name,"Config.Exe");
+        vector<string>K;
+        split(Src,K,'/');
+
+        remove((((string)CGP_BIN)+K[K.size()-1]).c_str());
+        cout<<GREEN<<"uninstalled: "<<BLUE<<import_Name<<GREEN<<" in "<<YELLOW<<CGP_BIN<<RESET<<"!"<<endl;
+        //std::string ext(".cgp");
+
+}
 int main(int argc, char **argv)
 {
         string Fname = ".cgp/";
@@ -1006,6 +1041,8 @@ int main(int argc, char **argv)
         LaboratoryCmd.add_Callable(&BIN_at_this, "--import", "import project from CGP_LIB", NLV);
         LaboratoryCmd.add_Callable(&listLib, "--list-lib", "list Libs in CGP_LIB", NLV);
         LaboratoryCmd.add_Callable(&list, "--list", "list project", NLV);
+        LaboratoryCmd.add_Callable(&Install, "--install", "install project", NLV);
+        LaboratoryCmd.add_Callable(&UnInstall, "--uninstall", "uninstall project", NLV);
         //LaboratoryCmd.add_Callable(&_import, "--import", "import project here", NLV);
         // Laboratory.add_Callable(&build, "--add-git-dep", "add a git ", NLV);
         //Laboratory.add_Callable(&update, "--update", "compile and link project", NLV);
