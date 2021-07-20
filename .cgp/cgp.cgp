@@ -1,5 +1,5 @@
 
-source.Checksum_sha1 = '81ad5d43c97b9bf4378116a19b42c898dde790bb '
+source.Checksum_sha1 = '039c94b5884c789cf1d919935d3378ef5ef33ac1 '
 thiscfg = '.cgp/cgp.cgp'
 exe = 'cgp'
 cwd = '/Users/christopherclement/Documents/TUI-Lib'

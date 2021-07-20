@@ -3,7 +3,10 @@
         "iosfwd": "cpp",
         "filesystem": "cpp",
         "vector": "cpp",
-        "iterator": "cpp"
+        "iterator": "cpp",
+        "iostream": "cpp",
+        "stdexcept": "cpp",
+        "string": "cpp"
     },
     
 }

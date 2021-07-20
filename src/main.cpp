@@ -311,8 +311,8 @@ string Get_Data(string Dependancy, string Key)
         }
 
         else
-                // cout << "Unable to Load Dependancy\"" << Dependancy << "\"" << endl;
-                return "";
+                cout << "Unable to Load Dependancy\"" << Dependancy << "\"" << endl;
+        return "";
 }
 
 int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string thisprog)
@@ -925,7 +925,6 @@ void *BIN_at_this(char **argb, int argc, MSTS_Vector *IN)
                         //nextis = 1;
                         import_Name = argb[i - 1];
 
-                        
                 //else if (nextis)
         }
         string LibPath = ((string)CGP_BIN) + ".CGP_LIB/";
@@ -970,7 +969,8 @@ void *listLib(char **argb, int argc, MSTS_Vector *)
         }
 }
 void *Install(char **argb, int argc, MSTS_Vector *)
-{       string import_Name;
+{
+        string import_Name;
         for (int i = 0; i < argc; i++)
         {
                 if (strcmp(argb[i], "--install") == 0)
@@ -978,14 +978,14 @@ void *Install(char **argb, int argc, MSTS_Vector *)
                         import_Name = argb[i - 1];
                 //else if (nextis)
         }
-        string Src=Get_Data(import_Name,"Config.Exe");
-        CopyRecursive(Src.c_str(),CGP_BIN);
-        cout<<GREEN<<"installed: "<<BLUE<<import_Name<<GREEN<<" in "<<YELLOW<<CGP_BIN<<RESET<<"!"<<endl;
+        string Src = Get_Data(import_Name, "Config.Exe");
+        CopyRecursive(Src.c_str(), CGP_BIN);
+        cout << GREEN << "installed: " << BLUE << import_Name << GREEN << " in " << YELLOW << CGP_BIN << RESET << "!" << endl;
         //std::string ext(".cgp");
-
 }
 void *UnInstall(char **argb, int argc, MSTS_Vector *)
-{       string import_Name;
+{
+        string import_Name;
         for (int i = 0; i < argc; i++)
         {
                 if (strcmp(argb[i], "--uninstall") == 0)
@@ -993,17 +993,131 @@ void *UnInstall(char **argb, int argc, MSTS_Vector *)
                         import_Name = argb[i - 1];
                 //else if (nextis)
         }
-        string Src=Get_Data(import_Name,"Config.Exe");
-        vector<string>K;
-        split(Src,K,'/');
+        string Src = Get_Data(import_Name, "Config.Exe");
+        vector<string> K;
+        split(Src, K, '/');
 
-        remove((((string)CGP_BIN)+K[K.size()-1]).c_str());
-        cout<<GREEN<<"uninstalled: "<<BLUE<<import_Name<<GREEN<<" in "<<YELLOW<<CGP_BIN<<RESET<<"!"<<endl;
+        remove((((string)CGP_BIN) + K[K.size() - 1]).c_str());
+        cout << GREEN << "uninstalled: " << BLUE << import_Name << GREEN << " in " << YELLOW << CGP_BIN << RESET << "!" << endl;
         //std::string ext(".cgp");
+}
+string Add_cgp(string f1, string f2, string Caract)
+{
+        //cout<<"building buffer"<<endl;
+        string i = Get_Data(f1, Caract);
+        string j = Get_Data(f2, Caract);
 
+        //cout<<i<<" "<<j<<endl;
+        vector<string> iPj1;
+        vector<string> iPj2;
+        split(i, iPj1, ' ');
+        split(j, iPj2, ' ');
+        bool isint = 0;
+        //cout<<"building buffer"<<iPj2.size()<<endl;
+
+        for (int JI = 0; JI < iPj2.size(); JI++)
+        {
+                if (!((strcmp(iPj2[JI].c_str(), " ") == 0) || (strcmp(iPj2[JI].c_str(), "") == 0)))
+                {
+                        //cout<<iPj2[JI]<<endl;
+                        for (int IJ = 0; IJ < iPj1.size(); IJ++)
+                        {
+                                if (!((strcmp(iPj1[IJ].c_str(), " ") == 0) || (strcmp(iPj1[IJ].c_str(), "") == 0)))
+                                {
+
+                                        if (strcmp(iPj2[JI].c_str(), iPj1[IJ].c_str()) == 0)
+                                        {
+                                                isint = 1;
+                                        }
+                                }
+                        }
+                        if (isint == 0)
+                        {
+                                iPj1.push_back(iPj2[JI]);
+                        }
+                        isint = 0;
+                }
+        }
+        //cout<<"building buffer"<<endl;
+        string bfu = "";
+        //cout<<iPj1.size()<<endl;
+        for (int kl = 0; kl < iPj1.size(); kl++)
+        {
+                bfu += (iPj1[kl]);
+                if (bfu[bfu.size() - 1] != ' ')
+                {
+                        bfu += ' ';
+                }
+                //cout<<iPj1[kl]<<endl;
+        }
+        //cout << bfu << endl;
+        return bfu;
+}
+//cgp merge
+void *Merge(char **argb, int argc, MSTS_Vector *)
+{
+        string Dest;
+        string src;
+        string name = ".cgp/";
+        string fname;
+        for (int i = 0; i < argc; i++)
+        {
+                if (strcmp(argb[i], "--merge") == 0)
+                {
+                        //nextis = 1;
+                        Dest = argb[i - 1];
+                        src = argb[i + 1];
+                        name += argb[i + 2];
+                        fname = argb[1 + 2];
+                        name.append(".cgp");
+                }
+
+                //else if (nextis)
+        }
+        string Deps = Add_cgp(Dest, src, "source.Deps");
+        string includes = Add_cgp(Dest, src, "source.includes");
+        string source = Add_cgp(Dest, src, "source.cppfiles");
+        string obj = Add_cgp(Dest, src, "source.cppobj");
+        string B_T = Add_cgp(Dest, src, "Build.Type");
+        //cout<<B_T<<endl;
+        vector<string> V_B_T;
+        split(B_T, V_B_T, ' ');
+        int ret = 3;
+        //cout<<V_B_T.size()<<endl;
+        for (int i = 0; i < V_B_T.size(); i++)
+        {
+                if (!((strcmp(V_B_T[i].c_str(), " ") == 0) || (strcmp(V_B_T[i].c_str(), "") == 0)))
+                {
+                                if (stoi(V_B_T[i]) < ret)
+                                {
+                                        ret = stoi(V_B_T[i]);
+                                }
+                }
+        }
+        cout << ret << endl;
+
+        MSTS *M_Deps = new MSTS("", Deps, "source.Deps");
+        MSTS *M_P_N = new MSTS("", name, "Config.Exe");
+        MSTS *M_includes = new MSTS("", includes, "source.includes");
+        MSTS *M_source = new MSTS("", source, "source.cppfiles");
+        MSTS *M_obj = new MSTS("", obj, "source.cppobj");
+
+        //Build.Type
+
+        MasterView *MF = new MasterView(MaxX, MaxY);
+        EditorView *ED = new EditorView(0, 0);
+        ED->add_MSTS(M_Deps, 0);
+        ED->add_MSTS(M_includes, 1);
+        ED->add_MSTS(M_source, 2);
+        ED->add_MSTS(M_obj, 3);
+        ED->add_MSTS(M_P_N, 3);
+        MF->addView(ED);
+        cout << "Created: " << name << endl;
+        MF->Save(name);
 }
 int main(int argc, char **argv)
 {
+
         string Fname = ".cgp/";
         bool frommenu = 0;
         if (!fs::is_directory(".cgp"))
@@ -1043,6 +1157,9 @@ int main(int argc, char **argv)
         LaboratoryCmd.add_Callable(&list, "--list", "list project", NLV);
         LaboratoryCmd.add_Callable(&Install, "--install", "install project", NLV);
         LaboratoryCmd.add_Callable(&UnInstall, "--uninstall", "uninstall project", NLV);
+        LaboratoryCmd.add_Callable(&Merge, "--merge", "merge Dest <- source", NLV);
+
+        //Add_cgp("cgp", "installer", "source.Deps");
         //LaboratoryCmd.add_Callable(&_import, "--import", "import project here", NLV);
         // Laboratory.add_Callable(&build, "--add-git-dep", "add a git ", NLV);
         //Laboratory.add_Callable(&update, "--update", "compile and link project", NLV);
