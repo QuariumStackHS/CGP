@@ -1,0 +1,4 @@
+--merge:
+    if(Dest + source are Dependancy of a cgp ){
+        remove source from Master's Deps;
+    }

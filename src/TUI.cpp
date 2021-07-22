@@ -3,6 +3,69 @@
 #include <sstream>
 int Debug = 0;
 struct winsize s;
+
+void Dyn_loader::Save(string Fname){
+                ofstream File(Fname, ios_base::out);
+                for(int i=0;i<this->Mok.size();i++){
+                        File<<this->Mok[i]->Alias<<" ='"<<this->Mok[i]->_Value<<"'\n";
+                }
+                File.close();
+        }
+Dyn_loader::Dyn_loader(string filename)
+        {
+                ifstream kl = ifstream(filename);
+                string line;
+                if (kl.is_open())
+                {
+                        while (getline(kl, line))
+                        {
+                                string Alias = "";
+                                string Value = "";
+
+                                for (int i = 0; i < line.size(); i++)
+                                {
+                                        int Stage = 0;
+                                        if (Stage == 0)
+                                        {
+                                                if ((line[i] == '='))
+                                                {
+                                                        //cout << "Stage 1 enclenched" << endl;
+                                                        for (int k = i; k < line.size(); k++)
+                                                        {
+                                                                if ((line[k] == '\'') && (Stage == 0))
+                                                                {
+                                                                        Stage++;
+                                                                }
+                                                                if (Stage == 1)
+                                                                {
+                                                                        if (line[k] != '\'')
+                                                                        {
+                                                                                Value.push_back(line[k]);
+                                                                        }
+
+                                                                        else
+                                                                        {
+                                                                                i = line.size() + 1;
+                                                                        }
+                                                                }
+                                                        }
+                                                }
+                                                else
+                                                {
+                                                        if (line[i] != ' ')
+                                                                Alias.push_back(line[i]);
+                                                }
+                                        }
+                                }
+                                if (!((strcmp(Alias.c_str(), " ") == 0) || (strcmp(Alias.c_str(), "") == 0))){
+                                        this->push_back(new MSTS("",Value,Alias));
+                                        
+                                }
+                                
+                        }
+                        //return this;
+                }
+        }
 View::ViewChar::ViewChar(int X, int Y, char C)
 {
     this->Char = C;

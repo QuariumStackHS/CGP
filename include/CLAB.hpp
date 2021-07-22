@@ -33,7 +33,15 @@ public:
     WildCard get_Callable(void *(*Taddr)(char **, int, WildCard));
     WildCard get_Callable(string);
 };
+class EArg
+{
+public:
+        string _Right;
+        string _Left;
 
+        EArg(string R, string L);
+};
+EArg *Get_arg(char **argb, int argc, string k);
 void show_Vec(Deskrp *K){
 MasterView* mf=new MasterView(MaxX,MaxY);
 mf->addView(K->V);

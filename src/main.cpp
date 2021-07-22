@@ -968,18 +968,12 @@ void *listLib(char **argb, int argc, MSTS_Vector *)
                 std::cout << " \"" << p.path().stem().string() << "\" in (" << p.path().string() << ")" << endl;
         }
 }
-class EArg
-{
-public:
-        string _Right;
-        string _Left;
 
-        EArg(string R, string L)
+EArg::EArg(string R, string L)
         {
                 this->_Left = R;
                 this->_Right = L;
         }
-};
 EArg *Get_arg(char **argb, int argc, string k)
 {
         string A;
@@ -1018,14 +1012,7 @@ void *Install(char **argb, int argc, MSTS_Vector *)
 
 void *UnInstall(char **argb, int argc, MSTS_Vector *)
 {
-        string import_Name;
-        for (int i = 0; i < argc; i++)
-        {
-                if (strcmp(argb[i], "--uninstall") == 0)
-                        //nextis = 1;
-                        import_Name = argb[i - 1];
-                //else if (nextis)
-        }
+        string import_Name = Get_arg(argb, argc, "--uninstall")->_Left;
         string Src = Get_Data(import_Name, "Config.Exe");
         vector<string> K;
         split(Src, K, '/');
@@ -1088,14 +1075,57 @@ string Add_cgp(string f1, string f2, string Caract)
         return bfu;
 }
 
-//cgp merge
+//first=cgp
+//Second=AES
+
+int is_dep_of(string first, string Second)
+{
+        string Deps = Get_Data(first, "source.Deps");
+        vector<string> Deps_L;
+        split(Deps, Deps_L, ' ');
+        for (int i = 0; i < Deps_L.size(); i++)
+        {
+                if ((!((strcmp(Deps_L[i].c_str(), " ") == 0) || (strcmp(Deps_L[i].c_str(), "") == 0))) && (strcmp(Deps_L[i].c_str(), Second.c_str()) == 0))
+                {
+                        return 1;
+                }
+        }
+        return 0;
+}
+
+//--merge
+
 void *Merge(char **argb, int argc, MSTS_Vector *)
 {
-        string Dest;
-        string src;
-        string name = ".cgp/";
-        string fname;
-        for (int i = 0; i < argc; i++)
+
+        EArg *iE = Get_arg(argb, argc, "--merge");
+        string Dest = iE->_Left;
+
+        string src = iE->_Right;
+        for (auto &p : fs::directory_iterator(".cgp/"))
+        {
+                if (p.path().extension() == ".cgp")
+                        if (is_dep_of(p.path().stem().string(), src)&&is_dep_of(p.path().stem().string(), Dest)){
+                                Dyn_loader DLL(((string)".cgp/")+p.path().stem().string()+".cgp");
+                                MSTS* Dsp=DLL.get_from_alias("source.Deps");
+                                vector<string>DLP;
+                                split(Dsp->_Value,DLP,' ');
+                                string New_Deps="";
+                                for(int i=0;i<DLP.size();i++){
+                                        if(!((strcmp(DLP[i].c_str(), " ") == 0) || (strcmp(DLP[i].c_str(), "") == 0))){
+                                                if(strcmp(DLP[i].c_str(),src.c_str())!=0){
+                                                        New_Deps+=(DLP[i]+" ");
+                                                }
+
+                                        }
+                                }
+                                Dsp->_Value=New_Deps;
+                                DLL.Save(((string)".cgp/")+p.path().stem().string()+".cgp");
+                                //cout << p.path().stem().string() << " Depend on : " << src << " you should remove it from is Config!" << endl;
+                        }
+        }
+        string name = ".cgp/" + Dest + ".cgp";
+        /*for (int i = 0; i < argc; i++)
         {
                 if (strcmp(argb[i], "--merge") == 0)
                 {
@@ -1108,7 +1138,7 @@ void *Merge(char **argb, int argc, MSTS_Vector *)
                 }
 
                 //else if (nextis)
-        }
+        }*/
 
         string sw = Add_cgp(Dest, src, "compile.Switchs");
         //sw.erase(sw.begin());
@@ -1149,7 +1179,7 @@ void *Merge(char **argb, int argc, MSTS_Vector *)
         //cout << ret << endl;
 
         MSTS *M_Deps = new MSTS("", Deps, "source.Deps");
-        MSTS *M_P_N = new MSTS("", fname, "Config.Exe");
+        MSTS *M_P_N = new MSTS("", Dest, "Config.Exe");
         MSTS *M_includes = new MSTS("", includes, "source.includes");
         MSTS *M_source = new MSTS("", source, "source.cppfiles");
         MSTS *M_obj = new MSTS("", obj, "source.cppobj");
@@ -1238,22 +1268,45 @@ void *clean(char **argb, int argc, MSTS_Vector *IN)
         }
 }
 //cgp [config] -C_S
-//create build script / Force build script / run 
-void*Create_scripts(char **argb, int argc, MSTS_Vector *IN){
+//create build script / Force build script / run
+void *Create_scripts(char **argb, int argc, MSTS_Vector *IN)
+{
         string o = Get_arg(argb, argc, "-C_S")->_Left;
-ofstream _build=ofstream(o+"_Build.sh");
-ofstream _force_build=ofstream(o+"_Force_Build.sh");
-ofstream _Run=ofstream(o+"_Test.sh");
-ofstream _clean=ofstream(o+"_Clean.sh");
-_build<<"cgp "<<o<<" --build";
-_force_build<<"cgp "<<o<<" --force --build";
-_Run<<"cgp "<<o<<" --build --run";
-_clean<<"cgp "<<o<<" --clean";
-_clean.close();
-_build.close();
-_force_build.close();
-_Run.close();
+        ofstream _build = ofstream(o + "_Build.sh");
+        ofstream _force_build = ofstream(o + "_Force_Build.sh");
+        ofstream _Run = ofstream(o + "_Test.sh");
+        ofstream _clean = ofstream(o + "_Clean.sh");
+        _build << "cgp " << o << " --build";
+        _force_build << "cgp " << o << " --force --build";
+        _Run << "cgp " << o << " --build --run";
+        _clean << "cgp " << o << " --clean";
+        _clean.close();
+        _build.close();
+        _force_build.close();
+        _Run.close();
+}
+void*Show_Parents(char **argb, int argc, MSTS_Vector *IN){
+        std::string path(".cgp/");
+        std::string ext(".cgp");
+        string nt=Get_arg(argb,argc,"--Parents")->_Left;
+        string jk;
+        for (auto &p : fs::recursive_directory_iterator(path))
+        {
 
+                if (p.path().extension() == ext)
+                {
+                        jk = Get_Data(p.path().stem().string(), "source.Deps");
+                        vector<string>kls;
+                        split(jk,kls,' ');
+                        for(int i=0;i<kls.size();i++){
+                                if (!((strcmp(kls[i].c_str(), " ") == 0) || (strcmp(kls[i].c_str(), "") == 0))){
+                                        if(strcmp(nt.c_str(),kls[i].c_str())==0){
+                                                cout<<GREEN<<"Found: "<<YELLOW<<p.path().stem().string()<<RESET<<endl;
+                                        }
+                                }
+                        }
+                }
+        }
 }
 int main(int argc, char **argv)
 {
@@ -1298,9 +1351,10 @@ int main(int argc, char **argv)
         LaboratoryCmd.add_Callable(&list, "--list", "list project", NLV);
         LaboratoryCmd.add_Callable(&Install, "--install", "install project", NLV);
         LaboratoryCmd.add_Callable(&UnInstall, "--uninstall", "uninstall project", NLV);
-        LaboratoryCmd.add_Callable(&Merge, "--merge", "merge Dest <- source", NLV);
+        LaboratoryCmd.add_Callable(&Merge, "--merge", "merge Dest <- source [cgp Main --merge AES]", NLV);
         LaboratoryCmd.add_Callable(&clean, "--clean", "clean obj", NLV);
         LaboratoryCmd.add_Callable(&Create_scripts, "-C_S", "Create build scripts", NLV);
+        LaboratoryCmd.add_Callable(&Show_Parents, "--Parents", "Create build scripts", NLV);
         //LaboratoryCmd.add_Callable(&Build_all, "--build*", "compile and link every project!", NLV);
 
         //Add_cgp("cgp", "installer", "source.Deps");

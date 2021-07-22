@@ -67,13 +67,20 @@ public:
 class MSTS_Vector
 {
 private:
-    vector<MSTS *> Mok;
 
 public:
+    vector<MSTS *> Mok;
+
     MSTS_Vector();
     void push_back(MSTS *);
     MSTS *get_from_alias(string);
     MSTS *get_from_Value(string);
+};
+class Dyn_loader : public MSTS_Vector
+{
+public:
+        Dyn_loader(string filename);
+        void Save(string Fname);
 };
 
 class vign : public View
