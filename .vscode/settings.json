@@ -6,7 +6,8 @@
         "iterator": "cpp",
         "iostream": "cpp",
         "stdexcept": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "fstream": "cpp"
     },
     
 }

@@ -1,2 +1,1 @@
-cgp Update --build
-./.cgp/Bin/update-cgp
+sudo cgp Main --build --install

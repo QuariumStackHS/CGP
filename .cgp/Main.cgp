@@ -1,9 +1,9 @@
 
-source.Checksum_sha1 = '039c94b5884c789cf1d919935d3378ef5ef33ac1 '
+source.Checksum_sha1 = 'd13053265c9e723d2e132505cc39a527733ed851 '
 thiscfg = '.cgp/cgp.cgp'
 exe = 'cgp'
 cwd = '/Users/christopherclement/Documents/TUI-Lib'
-compile.Switchs = ''
+compile.Switchs = '-lptrhead '
 source.cppfiles = 'src/main.cpp '
 source.cppobj = '.cgp/Bin/obj/main.o '
 source.Libs = ''

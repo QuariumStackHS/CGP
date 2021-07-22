@@ -221,7 +221,7 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
                                 //cout << ss.str() << endl;
                                 if (ret == 0)
                                 {
-                                        cout << GREEN << "Compiled: \"" << YELLOW << SRCs[i] << GREEN << "\" Successfully!" << RESET << endl;
+                                        cout << GREEN << "Compiled: \"" << YELLOW << SRCs[i] << GREEN << "\"" << BLUE << " Successfully" << GREEN << "!" << RESET << endl;
                                 }
                                 else
                                 {
@@ -310,7 +310,7 @@ string Get_Data(string Dependancy, string Key)
                 myfile.close();
         }
 
-        else
+        else if (Dependancy[0] != '-')
                 cout << "Unable to Load Dependancy\"" << Dependancy << "\"" << endl;
         return "";
 }
@@ -387,7 +387,7 @@ int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string
                 }
                 if (sw == 0)
                 {
-                        cout << GREEN << "Linked: \"" << YELLOW << buildname << GREEN << "\" Succesfully!" << RESET << endl;
+                        cout << BLUE << "Linked: \"" << YELLOW << buildname << GREEN << "\"" << BLUE << " Successfully" << GREEN << "!" << RESET << endl;
                 }
                 else
                 {
@@ -968,21 +968,54 @@ void *listLib(char **argb, int argc, MSTS_Vector *)
                 std::cout << " \"" << p.path().stem().string() << "\" in (" << p.path().string() << ")" << endl;
         }
 }
-void *Install(char **argb, int argc, MSTS_Vector *)
+class EArg
 {
-        string import_Name;
+public:
+        string _Right;
+        string _Left;
+
+        EArg(string R, string L)
+        {
+                this->_Left = R;
+                this->_Right = L;
+        }
+};
+EArg *Get_arg(char **argb, int argc, string k)
+{
+        string A;
+        string Z;
+        bool bf = 0;
+
         for (int i = 0; i < argc; i++)
         {
-                if (strcmp(argb[i], "--install") == 0)
-                        //nextis = 1;
-                        import_Name = argb[i - 1];
-                //else if (nextis)
+                if (strcmp(argb[i], k.c_str()) == 0)
+                {
+                        bf = 1;
+                }
+                if (argb[i][0] != '-')
+                {
+                        if (bf)
+                        {
+                                Z = argb[i];
+                                break;
+                        }
+                        else
+                        {
+                                A = argb[i];
+                        }
+                }
         }
+        return new EArg(A, Z);
+}
+void *Install(char **argb, int argc, MSTS_Vector *)
+{
+        string import_Name = Get_arg(argb, argc, "--install")->_Left;
         string Src = Get_Data(import_Name, "Config.Exe");
         CopyRecursive(Src.c_str(), CGP_BIN);
         cout << GREEN << "installed: " << BLUE << import_Name << GREEN << " in " << YELLOW << CGP_BIN << RESET << "!" << endl;
         //std::string ext(".cgp");
 }
+
 void *UnInstall(char **argb, int argc, MSTS_Vector *)
 {
         string import_Name;
@@ -1001,6 +1034,7 @@ void *UnInstall(char **argb, int argc, MSTS_Vector *)
         cout << GREEN << "uninstalled: " << BLUE << import_Name << GREEN << " in " << YELLOW << CGP_BIN << RESET << "!" << endl;
         //std::string ext(".cgp");
 }
+
 string Add_cgp(string f1, string f2, string Caract)
 {
         //cout<<"building buffer"<<endl;
@@ -1053,6 +1087,7 @@ string Add_cgp(string f1, string f2, string Caract)
         //cout << bfu << endl;
         return bfu;
 }
+
 //cgp merge
 void *Merge(char **argb, int argc, MSTS_Vector *)
 {
@@ -1068,12 +1103,15 @@ void *Merge(char **argb, int argc, MSTS_Vector *)
                         Dest = argb[i - 1];
                         src = argb[i + 1];
                         name += argb[i + 2];
-                        fname = argb[1 + 2];
+                        fname = argb[i + 2];
                         name.append(".cgp");
                 }
 
                 //else if (nextis)
         }
+
+        string sw = Add_cgp(Dest, src, "compile.Switchs");
+        //sw.erase(sw.begin());
         string Deps = Add_cgp(Dest, src, "source.Deps");
         string includes = Add_cgp(Dest, src, "source.includes");
         string source = Add_cgp(Dest, src, "source.cppfiles");
@@ -1084,23 +1122,39 @@ void *Merge(char **argb, int argc, MSTS_Vector *)
         split(B_T, V_B_T, ' ');
         int ret = 3;
         //cout<<V_B_T.size()<<endl;
+        vector<string> Dep_1;
+        split(Deps, Dep_1, ' ');
+        Deps = "";
+        for (int i = 0; i < Dep_1.size(); i++)
+        {
+                if (strcmp(Dep_1[i].c_str(), src.c_str()) == 0)
+                        Dep_1[i] = "";
+                else if (strcmp(Dep_1[i].c_str(), Dest.c_str()) == 0)
+                        Dep_1[i] = "";
+                if (!((strcmp(Dep_1[i].c_str(), " ") == 0) || (strcmp(Dep_1[i].c_str(), "") == 0)))
+                {
+                        Deps += (Dep_1[i] + ' ');
+                }
+        }
         for (int i = 0; i < V_B_T.size(); i++)
         {
                 if (!((strcmp(V_B_T[i].c_str(), " ") == 0) || (strcmp(V_B_T[i].c_str(), "") == 0)))
                 {
-                                if (stoi(V_B_T[i]) < ret)
-                                {
-                                        ret = stoi(V_B_T[i]);
-                                }
+                        if (stoi(V_B_T[i]) < ret)
+                        {
+                                ret = stoi(V_B_T[i]);
+                        }
                 }
         }
-        cout << ret << endl;
+        //cout << ret << endl;
 
         MSTS *M_Deps = new MSTS("", Deps, "source.Deps");
-        MSTS *M_P_N = new MSTS("", name, "Config.Exe");
+        MSTS *M_P_N = new MSTS("", fname, "Config.Exe");
         MSTS *M_includes = new MSTS("", includes, "source.includes");
         MSTS *M_source = new MSTS("", source, "source.cppfiles");
         MSTS *M_obj = new MSTS("", obj, "source.cppobj");
+        MSTS *M_B_T = new MSTS("", to_string(ret), "Build.Type");
+        MSTS *M_SW = new MSTS("", sw, "compile.Switchs");
 
         //Build.Type
 
@@ -1110,10 +1164,96 @@ void *Merge(char **argb, int argc, MSTS_Vector *)
         ED->add_MSTS(M_includes, 1);
         ED->add_MSTS(M_source, 2);
         ED->add_MSTS(M_obj, 3);
-        ED->add_MSTS(M_P_N, 3);
+        ED->add_MSTS(M_P_N, 4);
+        ED->add_MSTS(M_B_T, 5);
+        ED->add_MSTS(M_SW, 6);
         MF->addView(ED);
-        cout << "Created: " << name << endl;
+        //cout << "Created: " << name << endl;
         MF->Save(name);
+        delete MF;
+        delete ED;
+}
+void *Build_all(char **argb, int argc, MSTS_Vector *)
+{
+        std::string path(".cgp/");
+        std::string ext(".cgp");
+        string nt;
+        string jk;
+        for (auto &p : fs::recursive_directory_iterator(path))
+        {
+
+                if (p.path().extension() == ext)
+                {
+                        jk = Get_Data(p.path().stem().string(), "Build.Type");
+                        if (strcmp(jk.c_str(), "2") == 0)
+                        {
+                                cout << GREEN << "Ignoring:\"" << YELLOW << p.path().stem().string() << GREEN << "\"(Static Lib)" << endl;
+                        }
+                        else
+                        {
+                                nt = ((string) "cgp ") + p.path().stem().string();
+                                if (forcebuild)
+                                        nt += " --force";
+                                nt += " --build";
+                                cout << BLUE << "---" << YELLOW << p.path().stem().string() << BLUE << "---" << RESET << endl;
+                                system(nt.c_str());
+                        }
+                }
+        }
+}
+
+void *clean(char **argb, int argc, MSTS_Vector *IN)
+{
+        string o = Get_arg(argb, argc, "--clean")->_Left;
+        //cout << o << endl;
+        string f = IN->get_from_alias("thiscfg")->_Value;
+        vector<string> kl;
+        split(Get_Data(o, "source.cppobj"), kl, ' ');
+        for (int i = 0; i < kl.size(); i++)
+        {
+                if (!((strcmp(kl[i].c_str(), " ") == 0) || (strcmp(kl[i].c_str(), "") == 0)))
+                {
+                        if (remove(kl[i].c_str()) != 0)
+                        {
+                                cout << "Error while delete of:" << kl[i] << endl;
+                        }
+                        else
+                        {
+                                cout << BLUE << "Deleted:" << RED << kl[i] << BLUE << " Successfully!" << RESET << endl;
+                        }
+                }
+        }
+        vector<string> kl2;
+        split(Get_Data(o, "source.Deps"), kl2, ' ');
+        //cout<<o<<" "<<Get_Data(o,"source.Deps")<<endl;
+        string cmd;
+        for (int i = 0; i < kl2.size(); i++)
+        {
+                if (!((strcmp(kl2[i].c_str(), " ") == 0) || (strcmp(kl2[i].c_str(), "") == 0)))
+                {
+                        cmd = ((string) "cgp ") + kl2[i] + " --clean";
+                        //cout<<cmd<<endl;
+                        system(cmd.c_str());
+                }
+        }
+}
+//cgp [config] -C_S
+//create build script / Force build script / run 
+void*Create_scripts(char **argb, int argc, MSTS_Vector *IN){
+        string o = Get_arg(argb, argc, "-C_S")->_Left;
+ofstream _build=ofstream(o+"_Build.sh");
+ofstream _force_build=ofstream(o+"_Force_Build.sh");
+ofstream _Run=ofstream(o+"_Test.sh");
+ofstream _clean=ofstream(o+"_Clean.sh");
+_build<<"cgp "<<o<<" --build";
+_force_build<<"cgp "<<o<<" --force --build";
+_Run<<"cgp "<<o<<" --build --run";
+_clean<<"cgp "<<o<<" --clean";
+_clean.close();
+_build.close();
+_force_build.close();
+_Run.close();
+
 }
 int main(int argc, char **argv)
 {
@@ -1150,6 +1290,7 @@ int main(int argc, char **argv)
         Laboratory.add_Callable(&Forcebuild, "--force", "compile and link project without Verifying sha Signature", NLV);
         Laboratory.add_Callable(&build, "--build", "compile and link project", NLV);
         Laboratory.add_Callable(&run, "--run", "./APPNAME", NLV);
+        Laboratory.add_Callable(&Build_all, "--Build", "compile and link every project!", NLV);
         LaboratoryCmd.add_Callable(&_export, "--export", "export project to a folder", NLV);
         LaboratoryCmd.add_Callable(&Add_at_Bin, "--add", "add project to CGP_LIB", NLV);
         LaboratoryCmd.add_Callable(&BIN_at_this, "--import", "import project from CGP_LIB", NLV);
@@ -1158,6 +1299,9 @@ int main(int argc, char **argv)
         LaboratoryCmd.add_Callable(&Install, "--install", "install project", NLV);
         LaboratoryCmd.add_Callable(&UnInstall, "--uninstall", "uninstall project", NLV);
         LaboratoryCmd.add_Callable(&Merge, "--merge", "merge Dest <- source", NLV);
+        LaboratoryCmd.add_Callable(&clean, "--clean", "clean obj", NLV);
+        LaboratoryCmd.add_Callable(&Create_scripts, "-C_S", "Create build scripts", NLV);
+        //LaboratoryCmd.add_Callable(&Build_all, "--build*", "compile and link every project!", NLV);
 
         //Add_cgp("cgp", "installer", "source.Deps");
         //LaboratoryCmd.add_Callable(&_import, "--import", "import project here", NLV);
@@ -1345,7 +1489,6 @@ int main(int argc, char **argv)
         MF->addView(gpp);
         MF->addView(buildtype);
 
-        MF->Load(Fname);
         Config->Visible = 0;
 
         //char i;
@@ -1383,6 +1526,7 @@ int main(int argc, char **argv)
                                 if (strcmp(argv[i], "--help") != 0)
                                 {
                                         LaboratoryCmd.run(argv[i], argv, argc);
+                                        MF->Load(Fname);
                                         Laboratory.run(argv[i], argv, buildtype->current_index);
                                 }
                                 else
