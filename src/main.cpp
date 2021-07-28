@@ -5,6 +5,7 @@
 this is an exemple of what you can do using TUI.hpp and TUI.cpp in this Repository
 
 */
+#include <algorithm>
 #include <Aes.hpp>
 #include <CLAB.hpp>
 #include <Keys.h>
@@ -259,7 +260,7 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
         //Add_cgp()
         for (int i = 0; i < OBJs.size(); i++)
         {
-                
+
                 vector<string> Paths;
                 split(OBJs[i], Paths, '/');
                 string fpa;
@@ -426,6 +427,7 @@ int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string
                                         compileDepcommand += " --build";
                                         string srcF = AS(Dependancys[i]) + exename;
                                         string DestF = exename;
+                                        vector<string>splitedDepsOBj;
                                         switch (buildtype)
                                         {
                                         case 0:
@@ -441,7 +443,15 @@ int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string
                                         case 2:
                                                 Objects = Get_Data(Dependancys[i], "source.cppobj");
                                                 system(compileDepcommand.c_str());
-                                                Dependancys_libs += (" " + AS(Dependancys[i]) + Objects);
+                                                
+                                                split(Objects,splitedDepsOBj,' ');
+                                                
+                                                for(int p=0;p<splitedDepsOBj.size();p++){
+                                                        if ((strcmp(splitedDepsOBj[p].c_str(), " ") != 0) && (strcmp(splitedDepsOBj[p].c_str(), "") != 0)){
+                                                        Dependancys_libs += (" " + AS(Dependancys[i]) + splitedDepsOBj[p]);
+                                                        }
+                                                }
+                                                
                                                 break;
                                         default:
                                                 break;
