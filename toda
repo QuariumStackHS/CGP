@@ -1,4 +1,18 @@
+√=Done
+•=Undone
 --merge:
     if(Dest + source are Dependancy of a cgp ){
         remove source from Master's Deps;
+    }   √
+    keep a close look on how it perform the operation•
+--rename:
+    {
+        rename cgp and change name instance in Parents•
     }
+cgpfiles{
+exemple:
+in: ../TUI
+    TestLib/T_Lib
+} •
+when trying to execute a cgp out of the folder: 
+build dep tree for includes•

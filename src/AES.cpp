@@ -2,6 +2,13 @@
 #include <fstream>
 #include <iterator>
 #include <vector>
+unsigned char *gen_IV(unsigned char iv[32]){
+
+    for(int i=0;i<=IVlengh-1;i++){
+        iv[i]=rand() % 255 + 1;
+    }
+    return iv;
+}
 
 struct Aes_Save{
     char IV[IVlengh+1];

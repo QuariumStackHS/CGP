@@ -60,8 +60,9 @@ Deskrp *CLAB<WildCard>::show_desk(Deskrp *Kp)
     //MasterView *MF=new MasterView(MaxX,MaxY);
     for (int i = 0; i < this->Switchs.size(); i++){
         //cout<<this->Switchs[i].Name<<endl;
-        Kp->V->add_Horizon(GREEN+this->Switchs[i].Name,Kp->y,1);
-        Kp->V->add_Horizon(BLUE+this->Switchs[i].Desk+RESET,Kp->y,19);
+        Kp->V->add_Horizon(to_string(Kp->y),Kp->y,0);
+        Kp->V->add_Horizon(GREEN+this->Switchs[i].Name,Kp->y,3);
+        Kp->V->add_Horizon(BLUE+this->Switchs[i].Desk+RESET,Kp->y,23);
         Kp->y++;
     }
     //MF->clear();

@@ -10,7 +10,11 @@ void Dyn_loader::Save(string Fname){
                         File<<this->Mok[i]->Alias<<" ='"<<this->Mok[i]->_Value<<"'\n";
                 }
                 File.close();
+
+//
+
         }
+
 Dyn_loader::Dyn_loader(string filename)
         {
                 ifstream kl = ifstream(filename);
@@ -108,6 +112,8 @@ void View::add_Vertical(string str, int y, int x)
         }
         if (is == 0)
         {
+
+
 
             ViewChar *C = new View::ViewChar(iY, iX, str[iX - x], this);
             this->Chars.push_back(C);

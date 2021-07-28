@@ -109,10 +109,10 @@ Paths->Alias="none";
             j<<"#define CGP_BIN \""<<Paths->EA[Paths->current_index]->_Key<<"\"";
             j.close();
             i.close();
-            string cmd="sh compile.sh ; sudo cp .cgp/Bin/cgp "+Paths->EA[Paths->current_index]->_Key+"cgp";
+            string cmd="sh compile.sh ; cp .cgp/Bin/cgp "+Paths->EA[Paths->current_index]->_Key+"cgp";
             system(cmd.c_str());
-            string cmdc="sudo cp .cgp/Bin/AES_Lib.so "+Paths->EA[Paths->current_index]->_Key+"AES_Lib.so";
-            system(cmdc.c_str());
+            //string cmdc="sudo cp .cgp/Bin/AES_Lib.so "+Paths->EA[Paths->current_index]->_Key+"AES_Lib.so";
+            //system(cmdc.c_str());
 
             system("stty cooked");
             exit(0);

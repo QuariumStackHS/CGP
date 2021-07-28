@@ -5,25 +5,28 @@
 this is an exemple of what you can do using TUI.hpp and TUI.cpp in this Repository
 
 */
-
+#include <Aes.hpp>
 #include <CLAB.hpp>
-#include <TUI.hpp>
 #include <Keys.h>
 #include <SHA1.hpp>
-#include <Aes.hpp>
-#include <iostream>
-#include <fstream>
+#include <TUI.hpp>
 #include <cstdint>
 #include <filesystem>
-#include <Packtor.hpp>
+#include <fstream>
+#include <iostream>
+#include <string>
 namespace fs = std::filesystem;
 #include <sstream>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <unistd.h>
-#include <termios.h>
+#ifndef contain
+bool contain(string str, char c);
+#endif
 #include <USR.h>
+#include <termios.h>
+using namespace std;
+#include <unistd.h>
 string as_cgp(char *file)
 {
         int i = 0;
@@ -47,7 +50,7 @@ string as_cgp(char *file)
         return ((((string)file) + ".cgp"));
 }
 int forcebuild = 0;
-inline bool exists(const std::string &name)
+bool exists(const std::string &name)
 {
         if (FILE *file = fopen(name.c_str(), "r"))
         {
@@ -136,19 +139,34 @@ void recursive_mkdir(const char *p)
                 mkdir(current.c_str());
         }
 }
-int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS *addsw)
+string AS(string Deps)
+{
+        vector<string> Path;
+        split(Deps, Path, '/');
+        string filename = "";
+        for (int i = 0; i < Path.size() - 1; i++)
+        {
+                filename += Path[i] + '/';
+        }
+        return filename;
+}
+int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS *addsw, string Path, MSTS *deps)
 {
         //cout<<addsw->_Value<<endl;
         //char i;
         //cin>>i;
+
         vector<string> Sha;
         vector<string> OBJs;
         vector<string> SRCs;
         vector<string> IN;
+        vector<string> Deps;
         split(INCl->_Value, IN, ' ');
         split(OBJ->_Value, OBJs, ' ');
         split(SRC->_Value, SRCs, ' ');
+        split(deps->_Value, Deps, ' ');
         split(checkSums->_Value, Sha, ' ');
+        //Add_cgp()
         for (int i = 0; i < OBJs.size(); i++)
         {
                 vector<string> Paths;
@@ -182,16 +200,29 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
         checkSums->_Value = "";
         for (int i = 0; i < OBJs.size(); i++)
         {
-                if (!((strcmp(OBJs[i].c_str(), " ") == 0) || (strcmp(OBJs[i].c_str(), "") == 0)))
+                if ((!((strcmp(OBJs[i].c_str(), " ") == 0) || (strcmp(OBJs[i].c_str(), "") == 0))) && (!((strcmp(SRCs[i].c_str(), "") == 0) || (strcmp(SRCs[i].c_str(), " ") == 0))))
                 {
-                        string Shas = "";
-                        Shas = SHA1::from_file(SRCs[i]);
-                        bool havetocompile = 0;
-                        if (exists("./" + OBJs[i]) == false)
+                        string VP;
+                        if (strcmp(AS(Path).c_str(), "") == 0)
                         {
-                                cout << BOLDRED << "Missing Object:\"" << RESET << BLUE << OBJs[i] << BOLDRED << "\"!\nFall back did " << RESET;
+                                VP = "";
+                        }
+                        else
+                        {
+                                VP = "";/*AS(Path);
+                                recursive_mkdir(VP.c_str());
+                                */
+                        }
+                        string Shas = "";
+                        Shas = SHA1::from_file(VP + SRCs[i]);
+                        bool havetocompile = 0;
+                        //cout<<Sha[i].c_str()<<endl;
+                        if (exists("./" + VP + OBJs[i]) == false)
+                        {
+                                cout << BOLDRED << "Missing Object:\"" << RESET << BLUE << VP + OBJs[i] << BOLDRED << "\"!\nFall back did " << RESET;
                                 havetocompile = 1;
                         }
+
                         else if (forcebuild == 1)
                         {
                                 havetocompile = 1;
@@ -202,7 +233,11 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
                         }
                         else if ((strcmp(Sha[i].c_str(), Shas.c_str()) == 0))
                         {
-                                cout << GREEN << "Object:\"" << YELLOW << SRCs[i] << GREEN << "\" same checksum in the last compilation!(" << YELLOW << Shas << GREEN << ")" << endl;
+                                cout << GREEN << "Object:\"" << YELLOW << VP + SRCs[i] << GREEN << "\" same checksum in the last compilation!(" << YELLOW << Shas << GREEN << ")" << endl;
+                        }
+                        else if ((strcmp(Sha[i].c_str(), "") == 0) || (strcmp(Sha[i].c_str(), " ") == 0))
+                        {
+                                Sha[i] = "Null";
                         }
                         else if ((strcmp(Sha[i].c_str(), Shas.c_str()) != 0))
                         {
@@ -212,20 +247,23 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
                         {
                                 havetocompile = 0;
                         }
+
                         checkSums->_Value += Shas + ' ';
                         if (havetocompile)
                         {
+
                                 stringstream ss;
-                                ss << "g++ -w -std=" << cppV << " -c -o " << OBJs[i] << " " << SRCs[i] << includestring << " " << addsw->_Value;
+                                ss << "g++ -w -std=" << cppV << " -c -o " << VP << OBJs[i] << " " << VP + SRCs[i] << includestring << " " << addsw->_Value;
                                 ret = system(ss.str().c_str());
                                 //cout << ss.str() << endl;
                                 if (ret == 0)
                                 {
-                                        cout << GREEN << "Compiled: \"" << YELLOW << SRCs[i] << GREEN << "\"" << BLUE << " Successfully" << GREEN << "!" << RESET << endl;
+                                        cout << GREEN << "Compiled: \"" << YELLOW << VP + SRCs[i] << GREEN << "\"" << BLUE << " Successfully" << GREEN << "!" << RESET << endl;
                                 }
                                 else
                                 {
-                                        cout << RED << "Error while trying to compile \"" << YELLOW << SRCs[i] << RED << "\" !" << RESET << endl;
+                                        cout << fs::current_path() << endl;
+                                        cout << RED << "Error while trying to compile \"" << YELLOW << AS(Path) + SRCs[i] << RED << "\" !" << RESET << endl;
                                         cout << ss.str() << " = " << ret / 256 << endl;
                                 }
                         }
@@ -237,12 +275,23 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
         }
         return ret;
 }
+
 string Get_Data(string Dependancy, string Key)
 {
         //Alias ='Value'\n
+        vector<string> Path;
+        split(Dependancy, Path, '/');
+        string filename = "";
+        for (int i = 0; i < Path.size() - 1; i++)
+        {
+                filename += Path[i] + '/';
+        }
+        string fname(filename + ".cgp/" + as_cgp((char *)Path[Path.size() - 1].c_str()));
 
+        //cout<<"Data"<<(filename+".cgp/"+ as_cgp((char*)Path[Path.size()-1].c_str())).c_str()<<endl;
+        //cout<<filename<<":"<<fname<<endl;
+        ifstream myfile(fname);
         string line;
-        ifstream myfile(((string) ".cgp/") + as_cgp((char *)Dependancy.c_str()));
         if (myfile.is_open())
         {
 
@@ -300,6 +349,8 @@ string Get_Data(string Dependancy, string Key)
                                 {
                                         if (strcmp(Alias.c_str(), Key.c_str()) == 0)
                                         {
+                                                myfile.close();
+                                                //cout<<Value<<endl;
                                                 return Value;
                                         }
                                 }
@@ -310,7 +361,7 @@ string Get_Data(string Dependancy, string Key)
                 myfile.close();
         }
 
-        else if (Dependancy[0] != '-')
+        else if (Dependancy[0] != '-' && Dependancy[0] != '.' && !contain(Dependancy, '/'))
                 cout << "Unable to Load Dependancy\"" << Dependancy << "\"" << endl;
         return "";
 }
@@ -323,10 +374,22 @@ int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string
                 string Dependancys_libs;
                 split(Deps->_Value, Dependancys, ' ');
                 string Objects;
+
                 for (int i = 0; i < Dependancys.size(); i++)
-                {
+                { //cout<<Dependancys[i]<<endl;
                         if (strcmp(Dependancys[i].c_str(), "") != 0)
                         {
+                                string VP;
+                                if (strcmp(AS(Dependancys[i]).c_str(), "") == 0)
+                                {
+                                        VP = "";
+                                }
+                                else
+                                {
+                                        VP = AS(Dependancys[i]);
+                                        //cout<<VP<<":"<<VP+Dependancys[i]<<endl;
+                                        //recursive_mkdir(VP.c_str());
+                                }
                                 string exename = Get_Data(Dependancys[i], "Config.Exe");
                                 int buildtype;
 
@@ -342,17 +405,17 @@ int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string
                                         switch (buildtype)
                                         {
                                         case 0:
-                                                cout << "Dependancy \"" << Dependancys[i] << "\" as a builtype of 0" << endl;
+                                                cout << "Dependancy \"" << VP+Dependancys[i] << "\" as a builtype of 0" << endl;
                                                 break;
                                         case 1:
 
                                                 system(compileDepcommand.c_str());
-                                                Dependancys_libs += (" " + exename);
+                                                Dependancys_libs += (" " + AS(Dependancys[i]) + exename);
                                                 break;
                                         case 2:
                                                 Objects = Get_Data(Dependancys[i], "source.cppobj");
                                                 system(compileDepcommand.c_str());
-                                                Dependancys_libs += (" " + Objects);
+                                                Dependancys_libs += (" " + AS(Dependancys[i])+ Objects);
                                                 break;
                                         default:
                                                 break;
@@ -454,7 +517,7 @@ void *build(char **argb, int argc, MSTS_Vector *IN)
 {
         //IN->get_from_alias("source.Checksum_sha1");
         //cout<<IN->get_from_alias("Build.Type")->_Value<<endl;
-        compile(IN->get_from_alias("source.cppobj"), IN->get_from_alias("source.cppfiles"), IN->get_from_alias("source.includes"), IN->get_from_alias("G++.C++")->_Value, IN->get_from_alias("source.Checksum_sha1"), IN->get_from_alias("compile.Switchs"));
+        compile(IN->get_from_alias("source.cppobj"), IN->get_from_alias("source.cppfiles"), IN->get_from_alias("source.includes"), IN->get_from_alias("G++.C++")->_Value, IN->get_from_alias("source.Checksum_sha1"), IN->get_from_alias("compile.Switchs"), argb[1], IN->get_from_alias("source.Deps"));
         link(IN->get_from_alias("source.cppobj"), IN->get_from_alias("source.Libs"), IN->get_from_alias("source.Deps"), IN->get_from_alias("Config.Exe")->_Value, argc, argb[0]);
 }
 void *run(char **argb, int argc, MSTS_Vector *IN)
@@ -474,67 +537,12 @@ void *list(char **argb, int argc, MSTS_Vector *)
         for (auto &p : fs::recursive_directory_iterator(path))
         {
                 if (p.path().extension() == ext)
-                        std::cout << "\t" << p.path().stem().string() << ".cgp at .cgp/\n\n";
+                        std::cout << GREEN << "Found:" << YELLOW << p.path().stem().string() << RESET << endl;
         }
-}
-void *Pack(char **argb, int argc, MSTS_Vector *IN)
-{
-
-        string exportPath;
-        bool nextis;
-        for (int i = 0; i < argc; i++)
-        {
-                if (strcmp(argb[i], "--pack") == 0)
-                        nextis = 1;
-                else if (nextis)
-                        exportPath = argb[i];
-        }
-        Packtor *This = new Packtor();
-        unsigned char IV[32];
-        gen_IV(IV);
-        This->set_IV((char *)IV, sizeof(unsigned char) * 32);
-        vector<string> ki;
-        split(IN->get_from_alias("source.cppfiles")->_Value, ki, ' ');
-        for (int i = 0; i < ki.size(); i++)
-        {
-                if ((strcmp(ki[i].c_str(), " ") != 0) && (strcmp(ki[i].c_str(), "") != 0))
-                {
-                        ifstream ll(ki[i], ios::in);
-                        string line;
-                        int c = 0;
-                        while (getline(ll, line))
-                        {
-                                //cout << line << endl;
-                                c += line.length();
-                        }
-                        //cout<<c<<endl;
-                        ll.close();
-                        ifstream KK(ki[i], ios::out | ios::binary);
-                        //cout<<j<<endl;
-                        //cout<<(int64_t)<<endl;
-                        char buff[c];
-                        cout << sizeof(buff) << endl;
-                        //cout<<GetFileSize(ki[i])<<ki[i]<<endl;
-                        KK.read(buff, c * sizeof(char));
-                        cout << buff << endl;
-
-                        This->add_file((char *)ki[i].c_str(), ki[i].size(), (char *)&buff, sizeof(char) * c);
-                }
-        }
-        //This->add_file();
-        This->Gen_pack((char *)exportPath.c_str());
 }
 void *_export(char **argb, int argc, MSTS_Vector *IN)
 {
-        string exportPath;
-        bool nextis;
-        for (int i = 0; i < argc; i++)
-        {
-                if (strcmp(argb[i], "--export") == 0)
-                        nextis = 1;
-                else if (nextis)
-                        exportPath = argb[i];
-        }
+        string exportPath = Get_arg(argb, argc, "--export")->_Right;
         recursive_mkdir(exportPath.c_str());
         string ss = (exportPath) + "/.cgp/";
         recursive_mkdir(ss.c_str());
@@ -583,10 +591,11 @@ void *_export(char **argb, int argc, MSTS_Vector *IN)
                         string path = exportPath + "/";
                         for (int j = 0; j < dir.size() - 1; j++)
                         {
-                                path += dir[j];
+                                path += dir[j] + '/';
                         }
                         recursive_mkdir(path.c_str());
-                        path += '/' + dir[dir.size() - 1];
+                        path += dir[dir.size() - 1];
+                        //cout<<path<<endl;
                         CopyRecursive(source[i].c_str(), path.c_str());
                 }
         }
@@ -939,15 +948,7 @@ void *BIN_at_this(char **argb, int argc, MSTS_Vector *IN)
 }
 void *Add_at_Bin(char **argb, int argc, MSTS_Vector *IN)
 {
-        string import_Name;
-        //bool nextis;
-        for (int i = 0; i < argc; i++)
-        {
-                if (strcmp(argb[i], "--add") == 0)
-                        //nextis = 1;
-                        import_Name = argb[i - 1];
-                //else if (nextis)
-        }
+        string import_Name = Get_arg(argb, argc, "--add")->_Left;
         string LibPath = ((string)CGP_BIN) + ".CGP_LIB/";
         if (!exists(LibPath))
         {
@@ -970,10 +971,10 @@ void *listLib(char **argb, int argc, MSTS_Vector *)
 }
 
 EArg::EArg(string R, string L)
-        {
-                this->_Left = R;
-                this->_Right = L;
-        }
+{
+        this->_Left = R;
+        this->_Right = L;
+}
 EArg *Get_arg(char **argb, int argc, string k)
 {
         string A;
@@ -1006,7 +1007,7 @@ void *Install(char **argb, int argc, MSTS_Vector *)
         string import_Name = Get_arg(argb, argc, "--install")->_Left;
         string Src = Get_Data(import_Name, "Config.Exe");
         CopyRecursive(Src.c_str(), CGP_BIN);
-        cout << GREEN << "installed: " << BLUE << import_Name << GREEN << " in " << YELLOW << CGP_BIN << RESET << "!" << endl;
+        cout << GREEN << "installed: " << BLUE << Src << GREEN << " in " << YELLOW << CGP_BIN << RESET << "!" << endl;
         //std::string ext(".cgp");
 }
 
@@ -1105,22 +1106,25 @@ void *Merge(char **argb, int argc, MSTS_Vector *)
         for (auto &p : fs::directory_iterator(".cgp/"))
         {
                 if (p.path().extension() == ".cgp")
-                        if (is_dep_of(p.path().stem().string(), src)&&is_dep_of(p.path().stem().string(), Dest)){
-                                Dyn_loader DLL(((string)".cgp/")+p.path().stem().string()+".cgp");
-                                MSTS* Dsp=DLL.get_from_alias("source.Deps");
-                                vector<string>DLP;
-                                split(Dsp->_Value,DLP,' ');
-                                string New_Deps="";
-                                for(int i=0;i<DLP.size();i++){
-                                        if(!((strcmp(DLP[i].c_str(), " ") == 0) || (strcmp(DLP[i].c_str(), "") == 0))){
-                                                if(strcmp(DLP[i].c_str(),src.c_str())!=0){
-                                                        New_Deps+=(DLP[i]+" ");
+                        if (is_dep_of(p.path().stem().string(), src) && is_dep_of(p.path().stem().string(), Dest))
+                        {
+                                Dyn_loader DLL(((string) ".cgp/") + p.path().stem().string() + ".cgp");
+                                MSTS *Dsp = DLL.get_from_alias("source.Deps");
+                                vector<string> DLP;
+                                split(Dsp->_Value, DLP, ' ');
+                                string New_Deps = "";
+                                for (int i = 0; i < DLP.size(); i++)
+                                {
+                                        if (!((strcmp(DLP[i].c_str(), " ") == 0) || (strcmp(DLP[i].c_str(), "") == 0)))
+                                        {
+                                                if (strcmp(DLP[i].c_str(), src.c_str()) != 0)
+                                                {
+                                                        New_Deps += (DLP[i] + " ");
                                                 }
-
                                         }
                                 }
-                                Dsp->_Value=New_Deps;
-                                DLL.Save(((string)".cgp/")+p.path().stem().string()+".cgp");
+                                Dsp->_Value = New_Deps;
+                                DLL.Save(((string) ".cgp/") + p.path().stem().string() + ".cgp");
                                 //cout << p.path().stem().string() << " Depend on : " << src << " you should remove it from is Config!" << endl;
                         }
         }
@@ -1217,7 +1221,7 @@ void *Build_all(char **argb, int argc, MSTS_Vector *)
                         jk = Get_Data(p.path().stem().string(), "Build.Type");
                         if (strcmp(jk.c_str(), "2") == 0)
                         {
-                                cout << GREEN << "Ignoring:\"" << YELLOW << p.path().stem().string() << GREEN << "\"(Static Lib)" << endl;
+                                //cout << GREEN << "Ignoring:\"" << YELLOW << p.path().stem().string() << GREEN << "\"(Static Lib)" << endl;
                         }
                         else
                         {
@@ -1232,6 +1236,25 @@ void *Build_all(char **argb, int argc, MSTS_Vector *)
         }
 }
 
+void *Clean(char **argb, int argc, MSTS_Vector *IN)
+{
+        std::string path(".cgp/");
+        std::string ext(".cgp");
+        string nt;
+        string jk;
+        for (auto &p : fs::recursive_directory_iterator(path))
+        {
+
+                if (p.path().extension() == ext)
+                {
+                        jk = Get_Data(p.path().stem().string(), "Build.Type");
+                        nt = ((string) "cgp ") + p.path().stem().string();
+                        nt += " --clean";
+                        //cout << BLUE << "---" << YELLOW << p.path().stem().string() << BLUE << "---" << RESET << endl;
+                        system(nt.c_str());
+                }
+        }
+}
 void *clean(char **argb, int argc, MSTS_Vector *IN)
 {
         string o = Get_arg(argb, argc, "--clean")->_Left;
@@ -1245,12 +1268,24 @@ void *clean(char **argb, int argc, MSTS_Vector *IN)
                 {
                         if (remove(kl[i].c_str()) != 0)
                         {
-                                cout << "Error while delete of:" << kl[i] << endl;
+                                // cout << "Error while delete of:" << kl[i] << endl;
                         }
                         else
                         {
                                 cout << BLUE << "Deleted:" << RED << kl[i] << BLUE << " Successfully!" << RESET << endl;
                         }
+                }
+        }
+        string targetf = Get_Data(o, "Config.Exe");
+        if (exists(targetf))
+        {
+                if (remove(targetf.c_str()) != 0)
+                {
+                        // cout << "Error while delete of:" << kl[i] << endl;
+                }
+                else
+                {
+                        cout << BLUE << "Deleted:" << RED << targetf << BLUE << " Successfully!" << RESET << endl;
                 }
         }
         vector<string> kl2;
@@ -1269,6 +1304,7 @@ void *clean(char **argb, int argc, MSTS_Vector *IN)
 }
 //cgp [config] -C_S
 //create build script / Force build script / run
+
 void *Create_scripts(char **argb, int argc, MSTS_Vector *IN)
 {
         string o = Get_arg(argb, argc, "-C_S")->_Left;
@@ -1285,32 +1321,179 @@ void *Create_scripts(char **argb, int argc, MSTS_Vector *IN)
         _force_build.close();
         _Run.close();
 }
-void*Show_Parents(char **argb, int argc, MSTS_Vector *IN){
+void *Show_Parents(char **argb, int argc, MSTS_Vector *IN)
+{
+
         std::string path(".cgp/");
         std::string ext(".cgp");
-        string nt=Get_arg(argb,argc,"--Parents")->_Left;
+        string nt = Get_arg(argb, argc, "--Parents")->_Left;
         string jk;
         for (auto &p : fs::recursive_directory_iterator(path))
         {
 
                 if (p.path().extension() == ext)
                 {
+                        //cout<<"I"<<p.path().stem().string()<<endl;
                         jk = Get_Data(p.path().stem().string(), "source.Deps");
-                        vector<string>kls;
-                        split(jk,kls,' ');
-                        for(int i=0;i<kls.size();i++){
-                                if (!((strcmp(kls[i].c_str(), " ") == 0) || (strcmp(kls[i].c_str(), "") == 0))){
-                                        if(strcmp(nt.c_str(),kls[i].c_str())==0){
-                                                cout<<GREEN<<"Found: "<<YELLOW<<p.path().stem().string()<<RESET<<endl;
+                        vector<string> kls;
+                        split(jk, kls, ' ');
+                        for (int i = 0; i < kls.size(); i++)
+                        {
+                                if (!((strcmp(kls[i].c_str(), " ") == 0) || (strcmp(kls[i].c_str(), "") == 0)))
+                                {
+                                        if (strcmp(nt.c_str(), kls[i].c_str()) == 0)
+                                        {
+                                                cout << GREEN << "Found: " << YELLOW << p.path().stem().string() << RESET << endl;
                                         }
+                                        //cout<<kls[i]<<endl;
                                 }
                         }
                 }
         }
 }
-int main(int argc, char **argv)
+void *Backup(char **argb, int argc, MSTS_Vector *IN)
+{
+        EArg *INP = Get_arg(argb, argc, "--backup");
+        string nt = INP->_Left;   //Cgp to backup
+        string nts = INP->_Right; //name of backup
+
+        vector<string> Path;
+        split(nt, Path, '/');
+        string filename = "";
+        for (int i = 0; i < Path.size() - 1; i++)
+        {
+                filename += Path[i] + '/';
+        }
+        string PathFolder(filename + ".cgp/Backup/" + as_cgp((char *)Path[Path.size() - 1].c_str()) + "/" + nts);
+        //string PathFolder = (((string) ".cgp/Backup/") + nt + "/" + nts);
+        recursive_mkdir(PathFolder.c_str());
+        string cmd = "cgp " + nt + " --export " + PathFolder;
+        system(cmd.c_str());
+}
+void *Backin(char **argb, int argc, MSTS_Vector *IN)
+{
+        EArg *INP = Get_arg(argb, argc, "--backin");
+        string nt = INP->_Left;   //Cgp to backup
+        string nts = INP->_Right; //name of backup
+        string PathFolder = (((string) ".cgp/Backup/") + nt + "/" + nts);
+        string currentfold = fs::current_path();
+        fs::current_path(PathFolder.c_str());
+        string cmd = "cgp " + nt + " --export " + currentfold;
+        system(cmd.c_str());
+        fs::current_path(currentfold.c_str());
+}
+bool contain(string str, char c)
+{
+        for (int i = 0; i < str.size(); i++)
+        {
+                if (str[i] == c)
+                {
+                        return 1;
+                }
+        }
+        return 0;
+}
+/*
+        bool contain(string str, string c)
+        {
+                for (int i = 0; i < str.size(); i++)
+                {
+                        if (str[i] == c)
+                        {
+                                return 1;
+                        }
+                }
+                return 0;
+        }*/
+string remove(string str, char i)
+{
+        str.erase(std::remove(str.begin(), str.end(), i), str.end());
+        return str;
+}
+void Create_declarations(const char *filename, ofstream &HPP_)
+{
+        ifstream CPP_(filename);
+
+        string Buff;
+
+        while (getline(CPP_, Buff))
+        {
+                string Typename = "";
+                string DecName = "";
+                string DecTypes = "";
+                int Phase = 0;
+                string smb = "";
+                //cout<<(int)Buff[0]<<endl;
+                if ((Buff[0] != '\n') && (Buff[0] != 32))
+                {
+                        for (int i = 0; i < Buff.size(); i++)
+                        {
+                                smb += Buff[i];
+                                if ((Buff[i] == '*' || Buff[i] == ' ') && (Phase == 0))
+                                {
+                                        Typename = smb;
+                                        smb = "";
+                                        Phase++;
+                                }
+                                else if (Buff[i] == '(' && Phase == 1)
+                                {
+                                        DecName = smb;
+                                        smb = "";
+                                        Phase++;
+                                }
+                                else if (Buff[i] == ')' && Phase == 2)
+                                {
+                                        DecTypes = smb;
+                                        smb = "";
+                                }
+                        }
+                        if (!contain(DecName, ':') && (strcmp(Typename.c_str(), "") != 0) && (strcmp(DecName.c_str(), "") != 0))
+                        {
+                                HPP_ << "#ifndef " << remove(remove(DecName, '*'), '(') << endl;
+                                HPP_ << "\t" << Typename << DecName << DecTypes << ";" << endl;
+                                HPP_ << "#endif" << endl;
+                        }
+                }
+        }
+        //HPP_.close();
+}
+void *Create_Tests(char **argb, int argc, MSTS_Vector *IN)
 {
 
+        string cfgFile = Get_arg(argb, argc, "--create-tests")->_Left;
+        string output = Get_arg(argb, argc, "--create-tests")->_Right + "/Headers/" + cfgFile;
+        recursive_mkdir(output.c_str());
+        /*
+        .cgp/
+                source
+                        Main
+                                Tests
+                                        include
+                                                Header.hpp
+                Bin
+                        obj
+                                Objects.o
+                
+
+        */
+
+        ofstream *Hppfile = new ofstream(output + '/' + cfgFile + ".hpp");
+        (*Hppfile) << ("/*\nHeader Generated By CGP\nYou should include this header file for test units\nYou should also create \"T_Config.hpp\"\n*/\n#include<T_Config.hpp>\n");
+        vector<string> kld;
+        split(Get_Data(cfgFile, "source.cppfiles"), kld, ' ');
+        for (int i = 0; i < kld.size(); i++)
+        {
+                if (!((strcmp(kld[i].c_str(), " ") == 0) || (strcmp(kld[i].c_str(), "") == 0)))
+                {
+                        Create_declarations(kld[i].c_str(), *Hppfile);
+                }
+        }
+        cout << "Created:" << output << endl;
+        Hppfile->close();
+}
+int main(int argc, char **argv)
+{
+        //Create_declarations("src/main.cpp", "include/main.hpp");
         string Fname = ".cgp/";
         bool frommenu = 0;
         if (!fs::is_directory(".cgp"))
@@ -1331,8 +1514,9 @@ int main(int argc, char **argv)
 
         for (int j = 0; j < dirs.size() - 1; j++)
         {
-                path += dirs[j];
+                path += dirs[j]+"/";
         }
+       // cout<<"path:"<<path<<endl;
         if (strcmp(path.c_str(), "") != 0)
                 fs::current_path(path.c_str());
 
@@ -1340,10 +1524,10 @@ int main(int argc, char **argv)
         CLAB<MSTS_Vector *> LaboratoryCmd;
 
         MSTS_Vector *NLV = new MSTS_Vector();
-        Laboratory.add_Callable(&Forcebuild, "--force", "compile and link project without Verifying sha Signature", NLV);
+        Laboratory.add_Callable(&Forcebuild, "--force", "set a switch for forcing --build to skip sha1 signature", NLV);
         Laboratory.add_Callable(&build, "--build", "compile and link project", NLV);
         Laboratory.add_Callable(&run, "--run", "./APPNAME", NLV);
-        Laboratory.add_Callable(&Build_all, "--Build", "compile and link every project!", NLV);
+        Laboratory.add_Callable(&Build_all, "--Build", "compile and link every projects in Directory", NLV);
         LaboratoryCmd.add_Callable(&_export, "--export", "export project to a folder", NLV);
         LaboratoryCmd.add_Callable(&Add_at_Bin, "--add", "add project to CGP_LIB", NLV);
         LaboratoryCmd.add_Callable(&BIN_at_this, "--import", "import project from CGP_LIB", NLV);
@@ -1353,8 +1537,13 @@ int main(int argc, char **argv)
         LaboratoryCmd.add_Callable(&UnInstall, "--uninstall", "uninstall project", NLV);
         LaboratoryCmd.add_Callable(&Merge, "--merge", "merge Dest <- source [cgp Main --merge AES]", NLV);
         LaboratoryCmd.add_Callable(&clean, "--clean", "clean obj", NLV);
+        LaboratoryCmd.add_Callable(&Clean, "--Clean", "clean ALL objs", NLV);
         LaboratoryCmd.add_Callable(&Create_scripts, "-C_S", "Create build scripts", NLV);
-        LaboratoryCmd.add_Callable(&Show_Parents, "--Parents", "Create build scripts", NLV);
+        LaboratoryCmd.add_Callable(&Show_Parents, "--Parents", "Show parents of Projects", NLV);
+        LaboratoryCmd.add_Callable(&Backup, "--backup", "backup files ", NLV);
+        LaboratoryCmd.add_Callable(&Backin, "--backin", "restore backup files ", NLV);
+        LaboratoryCmd.add_Callable(&Create_Tests, "--create-tests", "create test in a folder ", NLV);
+
         //LaboratoryCmd.add_Callable(&Build_all, "--build*", "compile and link every project!", NLV);
 
         //Add_cgp("cgp", "installer", "source.Deps");
@@ -1371,6 +1560,8 @@ int main(int argc, char **argv)
         string command = "";
         if (frommenu == 0)
                 Fname += as_cgp((char *)dirs[dirs.size() - 1].c_str());
+        
+        //cout<<"Fname:"<<Fname<<endl;
         MSTS *thisinfo = new MSTS("", Fname, "thiscfg");
         MSTS *thisinfoargv0 = new MSTS("", argv[0], "exe");
         MSTS *currentworkingdir = new MSTS("", fs::current_path(), "cwd");
@@ -1793,14 +1984,14 @@ int main(int argc, char **argv)
                                         {
                                         case 0:
                                                 //build
-                                                compile(MSTS_objfiles, MSTS_sourcefiles, MSTS_Includes, gpp->Values[0]->_Value, MSTS_fileSha1, compilesw);
+                                                compile(MSTS_objfiles, MSTS_sourcefiles, MSTS_Includes, gpp->Values[0]->_Value, MSTS_fileSha1, compilesw, argv[1], MSTS_Dependancy);
                                                 link(MSTS_objfiles, MSTS_objLib, MSTS_Dependancy, Config->Values[1]->_Value, buildtype->current_index, argv[0]);
                                                 MF->Save(Fname);
                                                 /* code */
                                                 break;
                                         case 1:
                                                 //compile
-                                                compile(MSTS_objfiles, MSTS_sourcefiles, MSTS_Includes, gpp->Values[0]->_Value, MSTS_fileSha1, compilesw);
+                                                compile(MSTS_objfiles, MSTS_sourcefiles, MSTS_Includes, gpp->Values[0]->_Value, MSTS_fileSha1, compilesw, argv[1], MSTS_Dependancy);
                                                 MF->Save(Fname);
                                                 break;
                                         case 2:
