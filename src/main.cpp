@@ -139,142 +139,6 @@ void recursive_mkdir(const char *p)
                 mkdir(current.c_str());
         }
 }
-string AS(string Deps)
-{
-        vector<string> Path;
-        split(Deps, Path, '/');
-        string filename = "";
-        for (int i = 0; i < Path.size() - 1; i++)
-        {
-                filename += Path[i] + '/';
-        }
-        return filename;
-}
-int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS *addsw, string Path, MSTS *deps)
-{
-        //cout<<addsw->_Value<<endl;
-        //char i;
-        //cin>>i;
-
-        vector<string> Sha;
-        vector<string> OBJs;
-        vector<string> SRCs;
-        vector<string> IN;
-        vector<string> Deps;
-        split(INCl->_Value, IN, ' ');
-        split(OBJ->_Value, OBJs, ' ');
-        split(SRC->_Value, SRCs, ' ');
-        split(deps->_Value, Deps, ' ');
-        split(checkSums->_Value, Sha, ' ');
-        //Add_cgp()
-        for (int i = 0; i < OBJs.size(); i++)
-        {
-                vector<string> Paths;
-                split(OBJs[i], Paths, '/');
-                string fpa;
-                for (int j = 0; j < Paths.size() - 1; j++)
-                {
-                        fpa += Paths[j] + '/';
-                }
-                recursive_mkdir(fpa.c_str());
-        }
-        //for(int i=0;OBJ)
-        string includestring;
-        string Checks;
-        int ret = 0;
-        for (int i = 0; i < IN.size(); i++)
-        {
-                if (!((strcmp(IN[i].c_str(), " ") == 0) || (strcmp(IN[i].c_str(), "") == 0)))
-                {
-                        includestring += " -I" + IN[i];
-                }
-        }
-
-        /*for (int i = 0; i < Sha.size(); i++)
-        {
-                if (!((strcmp(Sha[i].c_str(), " ") == 0) || (strcmp(Sha[i].c_str(), "") == 0)))
-                {
-                        //Checks += Sha[i]+' ';
-                }
-        }*/
-        checkSums->_Value = "";
-        for (int i = 0; i < OBJs.size(); i++)
-        {
-                if ((!((strcmp(OBJs[i].c_str(), " ") == 0) || (strcmp(OBJs[i].c_str(), "") == 0))) && (!((strcmp(SRCs[i].c_str(), "") == 0) || (strcmp(SRCs[i].c_str(), " ") == 0))))
-                {
-                        string VP;
-                        if (strcmp(AS(Path).c_str(), "") == 0)
-                        {
-                                VP = "";
-                        }
-                        else
-                        {
-                                VP = "";/*AS(Path);
-                                recursive_mkdir(VP.c_str());
-                                */
-                        }
-                        string Shas = "";
-                        Shas = SHA1::from_file(VP + SRCs[i]);
-                        bool havetocompile = 0;
-                        //cout<<Sha[i].c_str()<<endl;
-                        if (exists("./" + VP + OBJs[i]) == false)
-                        {
-                                cout << BOLDRED << "Missing Object:\"" << RESET << BLUE << VP + OBJs[i] << BOLDRED << "\"!\nFall back did " << RESET;
-                                havetocompile = 1;
-                        }
-
-                        else if (forcebuild == 1)
-                        {
-                                havetocompile = 1;
-                        }
-                        else if (Sha.size() < i)
-                        {
-                                havetocompile = 1;
-                        }
-                        else if ((strcmp(Sha[i].c_str(), Shas.c_str()) == 0))
-                        {
-                                cout << GREEN << "Object:\"" << YELLOW << VP + SRCs[i] << GREEN << "\" same checksum in the last compilation!(" << YELLOW << Shas << GREEN << ")" << endl;
-                        }
-                        else if ((strcmp(Sha[i].c_str(), "") == 0) || (strcmp(Sha[i].c_str(), " ") == 0))
-                        {
-                                Sha[i] = "Null";
-                        }
-                        else if ((strcmp(Sha[i].c_str(), Shas.c_str()) != 0))
-                        {
-                                havetocompile = 1;
-                        }
-                        else
-                        {
-                                havetocompile = 0;
-                        }
-
-                        checkSums->_Value += Shas + ' ';
-                        if (havetocompile)
-                        {
-
-                                stringstream ss;
-                                ss << "g++ -w -std=" << cppV << " -c -o " << VP << OBJs[i] << " " << VP + SRCs[i] << includestring << " " << addsw->_Value;
-                                ret = system(ss.str().c_str());
-                                //cout << ss.str() << endl;
-                                if (ret == 0)
-                                {
-                                        cout << GREEN << "Compiled: \"" << YELLOW << VP + SRCs[i] << GREEN << "\"" << BLUE << " Successfully" << GREEN << "!" << RESET << endl;
-                                }
-                                else
-                                {
-                                        cout << fs::current_path() << endl;
-                                        cout << RED << "Error while trying to compile \"" << YELLOW << AS(Path) + SRCs[i] << RED << "\" !" << RESET << endl;
-                                        cout << ss.str() << " = " << ret / 256 << endl;
-                                }
-                        }
-                }
-                else
-                {
-                        //cout<<"invalid"<<endl;
-                }
-        }
-        return ret;
-}
 
 string Get_Data(string Dependancy, string Key)
 {
@@ -361,11 +225,168 @@ string Get_Data(string Dependancy, string Key)
                 myfile.close();
         }
 
-        else if (Dependancy[0] != '-' && Dependancy[0] != '.' && !contain(Dependancy, '/'))
+        else if (Dependancy[0] != '-' && Dependancy[0] != '.' && !contain(Dependancy, '/')&&(strcmp("",Dependancy.c_str())!=0))
                 cout << "Unable to Load Dependancy\"" << Dependancy << "\"" << endl;
         return "";
 }
+string AS(string Deps)
+{
+        vector<string> Path;
+        split(Deps, Path, '/');
+        string filename = "";
+        for (int i = 0; i < Path.size() - 1; i++)
+        {
+                filename += Path[i] + '/';
+        }
+        return filename;
+}
+int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS *addsw, string Path, MSTS *deps)
+{
+        //cout<<addsw->_Value<<endl;
+        //char i;
+        //cin>>i;
 
+        vector<string> Sha;
+        vector<string> OBJs;
+        vector<string> SRCs;
+        vector<string> IN;
+        vector<string> Deps;
+        split(INCl->_Value, IN, ' ');
+        split(OBJ->_Value, OBJs, ' ');
+        split(SRC->_Value, SRCs, ' ');
+        split(deps->_Value, Deps, ' ');
+        split(checkSums->_Value, Sha, ' ');
+        //Add_cgp()
+        for (int i = 0; i < OBJs.size(); i++)
+        {
+                vector<string> Paths;
+                split(OBJs[i], Paths, '/');
+                string fpa;
+                for (int j = 0; j < Paths.size() - 1; j++)
+                {
+                        fpa += Paths[j] + '/';
+                }
+                recursive_mkdir(fpa.c_str());
+        }
+                string includestring;
+        string Checks;
+        for(int i=0;i<Deps.size();i++){
+                vector<string>kl23;
+                split(Get_Data(Deps[i],"source.includes"),kl23,' ');
+                for(int j=0;j<kl23.size();j++){
+                        if (!((strcmp(kl23[j].c_str(), " ") == 0) || (strcmp(kl23[j].c_str(), "") == 0)))
+                        includestring+= " -I" + AS(Deps[i])+kl23[j];
+                }
+        }
+        //for(int i=0;OBJ)
+
+        int ret = 0;
+        for (int i = 0; i < IN.size(); i++)
+        {
+                if (!((strcmp(IN[i].c_str(), " ") == 0) || (strcmp(IN[i].c_str(), "") == 0)))
+                {
+                        includestring += " -I" + IN[i];
+                }
+        }
+        //cout<<includestring<<endl;
+
+        /*for (int i = 0; i < Sha.size(); i++)
+        {
+                if (!((strcmp(Sha[i].c_str(), " ") == 0) || (strcmp(Sha[i].c_str(), "") == 0)))
+                {
+                        //Checks += Sha[i]+' ';
+                }
+        }*/
+        checkSums->_Value = "";
+        for (int i = 0; i < OBJs.size(); i++)
+        {
+                if ((!((strcmp(OBJs[i].c_str(), " ") == 0) || (strcmp(OBJs[i].c_str(), "") == 0))) && (!((strcmp(SRCs[i].c_str(), "") == 0) || (strcmp(SRCs[i].c_str(), " ") == 0))))
+                {
+                        string VP;
+                        if (strcmp(AS(Path).c_str(), "") == 0)
+                        {
+                                VP = "";
+                        }
+                        else
+                        {
+                                VP = ""; /*AS(Path);
+                                recursive_mkdir(VP.c_str());
+                                */
+                        }
+                        string Shas = "";
+                        Shas = SHA1::from_file(VP + SRCs[i]);
+                        bool havetocompile = 0;
+                        //cout<<Sha[i].c_str()<<endl;
+                        if (exists("./" + VP + OBJs[i]) == false)
+                        {
+                                cout << BOLDRED << "Missing Object:\"" << RESET << BLUE << VP + OBJs[i] << BOLDRED << "\"!\nFall back did " << RESET;
+                                havetocompile = 1;
+                        }
+
+                        else if (forcebuild == 1)
+                        {
+                                havetocompile = 1;
+                        }
+                        else if (Sha.size() < i)
+                        {
+                                havetocompile = 1;
+                        }
+                        else if ((strcmp(Sha[i].c_str(), Shas.c_str()) == 0))
+                        {
+                                cout << GREEN << "Object:\"" << YELLOW << VP + SRCs[i] << GREEN << "\" same checksum in the last compilation!(" << YELLOW << Shas << GREEN << ")" << endl;
+                        }
+                        else if ((strcmp(Sha[i].c_str(), "") == 0) || (strcmp(Sha[i].c_str(), " ") == 0))
+                        {
+                                Sha[i] = "Null";
+                        }
+                        else if ((strcmp(Sha[i].c_str(), Shas.c_str()) != 0))
+                        {
+                                havetocompile = 1;
+                        }
+                        else
+                        {
+                                havetocompile = 0;
+                        }
+
+                        checkSums->_Value += Shas + ' ';
+                        if (havetocompile)
+                        {
+
+                                stringstream ss;
+                                ss << "g++ -w -std=" << cppV << " -c -o " << VP << OBJs[i] << " " << VP + SRCs[i] << includestring << " " << addsw->_Value;
+                                ret = system(ss.str().c_str());
+                                //cout << ss.str() << endl;
+                                if (ret == 0)
+                                {
+                                        cout << GREEN << "Compiled: \"" << YELLOW << VP + SRCs[i] << GREEN << "\"" << BLUE << " Successfully" << GREEN << "!" << RESET << endl;
+                                }
+                                else
+                                {
+                                        cout << fs::current_path() << endl;
+                                        cout << RED << "Error while trying to compile \"" << YELLOW << AS(Path) + SRCs[i] << RED << "\" !" << RESET << endl;
+                                        cout << ss.str() << " = " << ret / 256 << endl;
+                                }
+                        }
+                }
+                else
+                {
+                        //cout<<"invalid"<<endl;
+                }
+        }
+        return ret;
+}
+
+void CopyRecursive(const char *src, const char *target) noexcept
+{
+        try
+        {
+                fs::copy(src, target, fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+        }
+        catch (std::exception &e)
+        {
+                //std::cout << e.what();
+        }
+}
 int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string thisprog)
 {
         if (buildT != 2)
@@ -402,20 +423,24 @@ int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string
                                                 compileDepcommand += " --force";
 
                                         compileDepcommand += " --build";
+                                        string srcF = AS(Dependancys[i]) + exename;
+                                        string DestF = exename;
                                         switch (buildtype)
                                         {
                                         case 0:
-                                                cout << "Dependancy \"" << VP+Dependancys[i] << "\" as a builtype of 0" << endl;
+                                                cout << "Dependancy \"" << VP + Dependancys[i] << "\" as a builtype of 0" << endl;
                                                 break;
                                         case 1:
 
                                                 system(compileDepcommand.c_str());
-                                                Dependancys_libs += (" " + AS(Dependancys[i]) + exename);
+
+                                                CopyRecursive(srcF.c_str(), DestF.c_str());
+                                                Dependancys_libs += (" " + srcF);
                                                 break;
                                         case 2:
                                                 Objects = Get_Data(Dependancys[i], "source.cppobj");
                                                 system(compileDepcommand.c_str());
-                                                Dependancys_libs += (" " + AS(Dependancys[i])+ Objects);
+                                                Dependancys_libs += (" " + AS(Dependancys[i]) + Objects);
                                                 break;
                                         default:
                                                 break;
@@ -469,17 +494,7 @@ int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string
         }
         //ss<<" &>> Logs.GP";
 }
-void CopyRecursive(const char *src, const char *target) noexcept
-{
-        try
-        {
-                fs::copy(src, target, fs::copy_options::overwrite_existing | fs::copy_options::recursive);
-        }
-        catch (std::exception &e)
-        {
-                //std::cout << e.what();
-        }
-}
+
 DepTree *buildTree(string RGPFILE)
 {
         vector<string> Dependancys;
@@ -1514,9 +1529,9 @@ int main(int argc, char **argv)
 
         for (int j = 0; j < dirs.size() - 1; j++)
         {
-                path += dirs[j]+"/";
+                path += dirs[j] + "/";
         }
-       // cout<<"path:"<<path<<endl;
+        // cout<<"path:"<<path<<endl;
         if (strcmp(path.c_str(), "") != 0)
                 fs::current_path(path.c_str());
 
@@ -1560,7 +1575,7 @@ int main(int argc, char **argv)
         string command = "";
         if (frommenu == 0)
                 Fname += as_cgp((char *)dirs[dirs.size() - 1].c_str());
-        
+
         //cout<<"Fname:"<<Fname<<endl;
         MSTS *thisinfo = new MSTS("", Fname, "thiscfg");
         MSTS *thisinfoargv0 = new MSTS("", argv[0], "exe");
