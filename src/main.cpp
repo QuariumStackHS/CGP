@@ -259,6 +259,7 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
         //Add_cgp()
         for (int i = 0; i < OBJs.size(); i++)
         {
+                
                 vector<string> Paths;
                 split(OBJs[i], Paths, '/');
                 string fpa;
