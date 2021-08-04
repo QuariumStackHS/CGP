@@ -30,3 +30,5 @@ APath
 *.exe
 *.out
 *.app
+**Backup
+**SSL

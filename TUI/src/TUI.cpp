@@ -3,73 +3,116 @@
 #include <sstream>
 int Debug = 0;
 struct winsize s;
+EArg::EArg(string R, string L)
+{
+    this->_Left = R;
+    this->_Right = L;
+}
+void show_Vec(Deskrp *K)
+{
+    MasterView *mf = new MasterView(MaxX, MaxY);
+    mf->addView(K->V);
+    K->V->render();
+    mf->clear();
+    mf->Render();
 
-void Dyn_loader::Save(string Fname){
-                ofstream File(Fname, ios_base::out);
-                for(int i=0;i<this->Mok.size();i++){
-                        File<<this->Mok[i]->Alias<<" ='"<<this->Mok[i]->_Value<<"'\n";
-                }
-                File.close();
+    mf->Display();
+}
+EArg *Get_arg(char **argb, int argc, string k)
+{
+    string A;
+    string Z;
+    bool bf = 0;
 
-//
-
+    for (int i = 0; i < argc; i++)
+    {
+        if (strcmp(argb[i], k.c_str()) == 0)
+        {
+            bf = 1;
         }
+        if (argb[i][0] != '-')
+        {
+            if (bf)
+            {
+                Z = argb[i];
+                break;
+            }
+            else
+            {
+                A = argb[i];
+            }
+        }
+    }
+    return new EArg(A, Z);
+}
+void Dyn_loader::Save(string Fname)
+{
+    ofstream File(Fname, ios_base::out);
+    for (int i = 0; i < this->Mok.size(); i++)
+    {
+        File << this->Mok[i]->Alias << " ='" << this->Mok[i]->_Value << "'\n";
+    }
+    File.close();
+
+    //
+}
+
+
 
 Dyn_loader::Dyn_loader(string filename)
+{
+    ifstream kl = ifstream(filename);
+    string line;
+    if (kl.is_open())
+    {
+        while (getline(kl, line))
         {
-                ifstream kl = ifstream(filename);
-                string line;
-                if (kl.is_open())
+            string Alias = "";
+            string Value = "";
+
+            for (int i = 0; i < line.size(); i++)
+            {
+                int Stage = 0;
+                if (Stage == 0)
                 {
-                        while (getline(kl, line))
+                    if ((line[i] == '='))
+                    {
+                        //cout << "Stage 1 enclenched" << endl;
+                        for (int k = i; k < line.size(); k++)
                         {
-                                string Alias = "";
-                                string Value = "";
-
-                                for (int i = 0; i < line.size(); i++)
+                            if ((line[k] == '\'') && (Stage == 0))
+                            {
+                                Stage++;
+                            }
+                            if (Stage == 1)
+                            {
+                                if (line[k] != '\'')
                                 {
-                                        int Stage = 0;
-                                        if (Stage == 0)
-                                        {
-                                                if ((line[i] == '='))
-                                                {
-                                                        //cout << "Stage 1 enclenched" << endl;
-                                                        for (int k = i; k < line.size(); k++)
-                                                        {
-                                                                if ((line[k] == '\'') && (Stage == 0))
-                                                                {
-                                                                        Stage++;
-                                                                }
-                                                                if (Stage == 1)
-                                                                {
-                                                                        if (line[k] != '\'')
-                                                                        {
-                                                                                Value.push_back(line[k]);
-                                                                        }
+                                    Value.push_back(line[k]);
+                                }
 
-                                                                        else
-                                                                        {
-                                                                                i = line.size() + 1;
-                                                                        }
-                                                                }
-                                                        }
-                                                }
-                                                else
-                                                {
-                                                        if (line[i] != ' ')
-                                                                Alias.push_back(line[i]);
-                                                }
-                                        }
+                                else
+                                {
+                                    i = line.size() + 1;
                                 }
-                                if (!((strcmp(Alias.c_str(), " ") == 0) || (strcmp(Alias.c_str(), "") == 0))){
-                                        this->push_back(new MSTS("",Value,Alias));
-                                        
-                                }
-                                
+                            }
                         }
-                        //return this;
+                    }
+                    else
+                    {
+                        if (line[i] != ' ')
+                            Alias.push_back(line[i]);
+                    }
                 }
+            }
+            if (!((strcmp(Alias.c_str(), " ") == 0) || (strcmp(Alias.c_str(), "") == 0)))
+            {
+                this->push_back(new MSTS("", Value, Alias));
+            }
         }
+        //return this;
+    }
+}
 View::ViewChar::ViewChar(int X, int Y, char C)
 {
     this->Char = C;
@@ -112,8 +155,6 @@ void View::add_Vertical(string str, int y, int x)
         }
         if (is == 0)
         {
-
-
 
             ViewChar *C = new View::ViewChar(iY, iX, str[iX - x], this);
             this->Chars.push_back(C);
@@ -227,51 +268,52 @@ MasterView::MasterView(int maxX, int maxY)
 }
 void MasterView::Save(string Filename)
 {
-    if(Filename[5]!='-'){
-    vector<string> Did;
-    ofstream myfile;
-    myfile.open(Filename.c_str(), ios_base::out);
-    stringstream ss;
-    ss << "";
-    //cout<<"Begin"<<endl;
-    for (int i = 0; i < this->DATAC.size(); i++)
+    if (Filename[5] != '-')
     {
-        string current = this->DATAC[i]->SaveAll();
-        bool good = 1;
-        for (int j = 0; j < Did.size(); j++)
+        vector<string> Did;
+        ofstream myfile;
+        myfile.open(Filename.c_str(), ios_base::out);
+        stringstream ss;
+        ss << "";
+        //cout<<"Begin"<<endl;
+        for (int i = 0; i < this->DATAC.size(); i++)
         {
-            if (strcmp(Did[j].c_str(), current.c_str()) == 0)
+            string current = this->DATAC[i]->SaveAll();
+            bool good = 1;
+            for (int j = 0; j < Did.size(); j++)
             {
-                good = 0;
+                if (strcmp(Did[j].c_str(), current.c_str()) == 0)
+                {
+                    good = 0;
+                }
+                else
+                {
+                    Did.push_back(current);
+                }
             }
-            else
-            {
-                Did.push_back(current);
-            }
+            if (good == 1)
+                ss << current;
         }
-        if (good == 1)
-            ss << current;
-    }
-    for (int i = 0; i < this->DATAD.size(); i++)
-    {
-        string current = this->DATAD[i]->SaveAll();
-        bool good = 1;
-        for (int j = 0; j < Did.size(); j++)
+        for (int i = 0; i < this->DATAD.size(); i++)
         {
-            if (strcmp(Did[j].c_str(), current.c_str()) == 0)
+            string current = this->DATAD[i]->SaveAll();
+            bool good = 1;
+            for (int j = 0; j < Did.size(); j++)
             {
-                good = 0;
+                if (strcmp(Did[j].c_str(), current.c_str()) == 0)
+                {
+                    good = 0;
+                }
+                else
+                {
+                    Did.push_back(current);
+                }
             }
-            else
-            {
-                Did.push_back(current);
-            }
+            if ((good == 1) && (current[0] != ' '))
+                ss << current;
         }
-        if ((good == 1) && (current[0] != ' '))
-            ss << current;
-    }
-    myfile << ss.str();
-    myfile.close();
+        myfile << ss.str();
+        myfile.close();
     }
 }
 void MasterView::addView(View *IN)
@@ -329,10 +371,10 @@ void EditorView::render()
         string Data = "";
         if (this->current_index == i)
         {
-            if(Values[i]->_Key.size()<=2)
-            Data = GREEN+ Values[i]->_Key +RESET+ " : " + RED + Values[i]->_Value + RESET;
+            if (Values[i]->_Key.size() <= 2)
+                Data = GREEN + Values[i]->_Key + RESET + " : " + RED + Values[i]->_Value + RESET;
             else
-             Data = Values[i]->_Key + " : " + RED + Values[i]->_Value + RESET;
+                Data = Values[i]->_Key + " : " + RED + Values[i]->_Value + RESET;
         }
         else
         {
@@ -499,8 +541,8 @@ void MasterView::Load(string Filename)
         myfile.close();
     }
 
-   // else
-        //cout << "Unable to Load file\"" << Filename << "\"" << endl;
+    // else
+    //cout << "Unable to Load file\"" << Filename << "\"" << endl;
 }
 dropdownlist::dropdownlist(int X, int Y)
 {
@@ -530,7 +572,6 @@ void dropdownlist::render()
             {
                 this->add_Horizon(this->EA[i]->_Value, x - i, y + this->Key.size());
             }
-            
         }
     }
     else

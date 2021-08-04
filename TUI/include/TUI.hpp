@@ -1,7 +1,8 @@
+#include <fstream>
 #include <iostream>
 #include <string>
-#include <fstream>
 #include <vector>
+
 #ifndef RESET
 #define RESET "\033[0m"
 #define BLACK "\033[30m"              /* Black */
@@ -22,10 +23,9 @@
 #define BOLDWHITE "\033[1m\033[37m"
 #include <size.h>
 using namespace std;
-
 class View
 {
-protected:
+public:
     class ViewChar
     {
     public:
@@ -42,8 +42,8 @@ protected:
         int Ypos;
     };
 
-public:
-    bool Visible = 1;
+
+    bool Visible=1;
     View();
     string SaveAll();
     void clear();
@@ -53,8 +53,37 @@ public:
     vector<ViewChar *> Chars;
     friend class MasterView;
 
-private:
 };
+struct Deskrp
+{
+    View *V = new View();
+    int y;
+};
+template <class WildCard>
+class CLAB
+{
+private:
+    struct CallableObj
+    {
+        void *(*Taddr)(char **, int, WildCard);
+        string Name;
+        string Desk;
+        WildCard wc;
+    };
+    vector<CallableObj> Switchs;
+    /* data */
+public:
+    CLAB();
+    void add_Callable(void *(Taddr)(char **, int, WildCard), string, string, WildCard);
+    void run(string, char **, int);
+    Deskrp *show_desk(Deskrp *Kp);
+
+    WildCard get_Callable(void *(*Taddr)(char **, int, WildCard));
+    WildCard get_Callable(string);
+};
+
+
+
 class MSTS
 {
 public:
@@ -67,7 +96,6 @@ public:
 class MSTS_Vector
 {
 private:
-
 public:
     vector<MSTS *> Mok;
 
@@ -79,8 +107,8 @@ public:
 class Dyn_loader : public MSTS_Vector
 {
 public:
-        Dyn_loader(string filename);
-        void Save(string Fname);
+    Dyn_loader(string filename);
+    void Save(string Fname);
 };
 
 class vign : public View
@@ -125,47 +153,62 @@ public:
     vector<MSTS *> EA;
 };
 //do not use what is bellow
-class Coll: public View{
-    protected:
+class Coll : public View
+{
+protected:
     int x;
     int y;
+
 public:
-Coll(int,int);
+    Coll(int, int);
     void add_MSTS(MSTS *, int);
     void render();
     string SaveAll();
     vector<MSTS *> EA;
 };
-class DepTree:public View{
+class EArg
+{
 public:
-        int x;
-        int y;
-        string name;
-        string fileCFG;
-        vector<DepTree*>Childs;
-        DepTree(int,int);
-        int AddChild(DepTree*);
-        void render();
-        void ChildRender(DepTree*Master,int level,int right);
-        
+    string _Right;
+    string _Left;
+
+    EArg(string R, string L);
 };
-class Dynamic_Property{
+EArg *Get_arg(char **argb, int argc, string k);
+void show_Vec(Deskrp *K);
+class DepTree : public View
+{
+public:
+    int x;
+    int y;
+    string name;
+    string fileCFG;
+    vector<DepTree *> Childs;
+    DepTree(int, int);
+    int AddChild(DepTree *);
+    void render();
+    void ChildRender(DepTree *Master, int level, int right);
+};
+class Dynamic_Property
+{
 private:
-    vector<string>Props;
+    vector<string> Props;
+
 public:
     void add_Prop();
     Dynamic_Property();
 };
-class String_S_Matrice:public View{
-    protected:
-    
-vector<Dynamic_Property>Vectors;
+class String_S_Matrice : public View
+{
+protected:
+    vector<Dynamic_Property> Vectors;
+
 public:
     int x;
     int y;
     void render();
 
-    String_S_Matrice(int,int);
+    String_S_Matrice(int, int);
 };
 
 class MasterView
@@ -175,7 +218,7 @@ public:
     void Render();
     void clear();
     void Display();
-    void set_MSTS_Vector(MSTS_Vector*);
+    void set_MSTS_Vector(MSTS_Vector *);
     void load_into_Vector();
     void addView(View *);
     void addView(EditorView *);
@@ -188,7 +231,7 @@ public:
     void Load(string Filname);
 
 protected:
-MSTS_Vector*dvector;
+    MSTS_Vector *dvector;
     char Buffer[MaxX][MaxY];
     vector<View *> Views;
     vector<EditorView *> DATAC;

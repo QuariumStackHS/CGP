@@ -5,12 +5,13 @@
 this is an exemple of what you can do using TUI.hpp and TUI.cpp in this Repository
 
 */
-#include <algorithm>
 #include <Aes.hpp>
 #include <CLAB.hpp>
 #include <Keys.h>
+#include <Main.h>
 #include <SHA1.hpp>
 #include <TUI.hpp>
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -226,7 +227,7 @@ string Get_Data(string Dependancy, string Key)
                 myfile.close();
         }
 
-        else if (Dependancy[0] != '-' && Dependancy[0] != '.' && !contain(Dependancy, '/')&&(strcmp("",Dependancy.c_str())!=0))
+        else if (Dependancy[0] != '-' && Dependancy[0] != '.' && !contain(Dependancy, '/') && (strcmp("", Dependancy.c_str()) != 0))
                 cout << "Unable to Load Dependancy\"" << Dependancy << "\"" << endl;
         return "";
 }
@@ -270,14 +271,16 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
                 }
                 recursive_mkdir(fpa.c_str());
         }
-                string includestring;
+        string includestring;
         string Checks;
-        for(int i=0;i<Deps.size();i++){
-                vector<string>kl23;
-                split(Get_Data(Deps[i],"source.includes"),kl23,' ');
-                for(int j=0;j<kl23.size();j++){
+        for (int i = 0; i < Deps.size(); i++)
+        {
+                vector<string> kl23;
+                split(Get_Data(Deps[i], "source.includes"), kl23, ' ');
+                for (int j = 0; j < kl23.size(); j++)
+                {
                         if (!((strcmp(kl23[j].c_str(), " ") == 0) || (strcmp(kl23[j].c_str(), "") == 0)))
-                        includestring+= " -I" + AS(Deps[i])+kl23[j];
+                                includestring += " -I" + AS(Deps[i]) + kl23[j];
                 }
         }
         //for(int i=0;OBJ)
@@ -340,6 +343,8 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
                         else if ((strcmp(Sha[i].c_str(), "") == 0) || (strcmp(Sha[i].c_str(), " ") == 0))
                         {
                                 Sha[i] = "Null";
+                                cout << "sha=null" << endl;
+                                havetocompile = 1;
                         }
                         else if ((strcmp(Sha[i].c_str(), Shas.c_str()) != 0))
                         {
@@ -349,7 +354,7 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
                         {
                                 havetocompile = 0;
                         }
-
+                        //cout << Shas << endl;
                         checkSums->_Value += Shas + ' ';
                         if (havetocompile)
                         {
@@ -375,10 +380,11 @@ int compile(MSTS *OBJ, MSTS *SRC, MSTS *INCl, string cppV, MSTS *checkSums, MSTS
                         //cout<<"invalid"<<endl;
                 }
         }
+        //cout<<checkSums->_Value<<endl;
         return ret;
 }
 
-void CopyRecursive(const char *src, const char *target) noexcept
+void CopyRecursive(const char *src, const char *target)
 {
         try
         {
@@ -427,7 +433,7 @@ int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string
                                         compileDepcommand += " --build";
                                         string srcF = AS(Dependancys[i]) + exename;
                                         string DestF = exename;
-                                        vector<string>splitedDepsOBj;
+                                        vector<string> splitedDepsOBj;
                                         switch (buildtype)
                                         {
                                         case 0:
@@ -443,15 +449,17 @@ int link(MSTS *OBJ, MSTS *LIBS, MSTS *Deps, string buildname, int buildT, string
                                         case 2:
                                                 Objects = Get_Data(Dependancys[i], "source.cppobj");
                                                 system(compileDepcommand.c_str());
-                                                
-                                                split(Objects,splitedDepsOBj,' ');
-                                                
-                                                for(int p=0;p<splitedDepsOBj.size();p++){
-                                                        if ((strcmp(splitedDepsOBj[p].c_str(), " ") != 0) && (strcmp(splitedDepsOBj[p].c_str(), "") != 0)){
-                                                        Dependancys_libs += (" " + AS(Dependancys[i]) + splitedDepsOBj[p]);
+
+                                                split(Objects, splitedDepsOBj, ' ');
+
+                                                for (int p = 0; p < splitedDepsOBj.size(); p++)
+                                                {
+                                                        if ((strcmp(splitedDepsOBj[p].c_str(), " ") != 0) && (strcmp(splitedDepsOBj[p].c_str(), "") != 0))
+                                                        {
+                                                                Dependancys_libs += (" " + AS(Dependancys[i]) + splitedDepsOBj[p]);
                                                         }
                                                 }
-                                                
+
                                                 break;
                                         default:
                                                 break;
@@ -539,12 +547,21 @@ void *Forcebuild(char **, int, MSTS_Vector *)
 {
         forcebuild = 1;
 }
-void *build(char **argb, int argc, MSTS_Vector *IN)
+void *build(char **argb, int argc, MSTS_Vector *DLL)
 {
         //IN->get_from_alias("source.Checksum_sha1");
         //cout<<IN->get_from_alias("Build.Type")->_Value<<endl;
+        //string fpl="";
+        vector<string>fplp;
+        split(argb[1],fplp,'/');
+        string fpl=fplp[fplp.size()-1];
+        //cout<<argb[1]<<fs::current_path()<<endl;
+        //cout<<".cgp/" +fpl+ ".cgp"<<endl;
+        Dyn_loader *IN = new Dyn_loader(".cgp/" +fpl+ ".cgp");
         compile(IN->get_from_alias("source.cppobj"), IN->get_from_alias("source.cppfiles"), IN->get_from_alias("source.includes"), IN->get_from_alias("G++.C++")->_Value, IN->get_from_alias("source.Checksum_sha1"), IN->get_from_alias("compile.Switchs"), argb[1], IN->get_from_alias("source.Deps"));
         link(IN->get_from_alias("source.cppobj"), IN->get_from_alias("source.Libs"), IN->get_from_alias("source.Deps"), IN->get_from_alias("Config.Exe")->_Value, argc, argb[0]);
+        IN->Save(".cgp/" +fpl+ ".cgp");
+
 }
 void *run(char **argb, int argc, MSTS_Vector *IN)
 {
@@ -600,7 +617,7 @@ void *_export(char **argb, int argc, MSTS_Vector *IN)
                         vector<string> each;
                         string jk = "";
                         split(Objfolder[i], each, '/');
-                        for (int j = 0; j <= Objfolder.size() - 1; j++)
+                        for (int j = 0; j < each[j].size(); j++)
                                 jk += each[j] + '/';
                         //cout << jk << endl;
                         recursive_mkdir((exportPath + '/' + jk).c_str());
@@ -629,9 +646,13 @@ void *_export(char **argb, int argc, MSTS_Vector *IN)
         {
                 if ((strcmp(Deps[i].c_str(), " ") != 0) && (strcmp(Deps[i].c_str(), "") != 0))
                 {
-                        string cmd = IN->get_from_alias("exe")->_Value + ' ' + Deps[i] + " --export " + exportPath;
-                        //cout << cmd << endl;
+                        string bpath=fs::current_path();
+                        cout<<bpath<<endl;
+                        fs::current_path(AS(Deps[i]));
+                        string cmd = "cgp " + remove(Deps[i],AS(Deps[i])) + " --export " + exportPath + '/' + AS(Deps[i]);
+                        cout << cmd << endl;
                         system(cmd.c_str());
+                        fs::current_path(bpath);
                 }
         }
         vector<string> includes;
@@ -996,38 +1017,6 @@ void *listLib(char **argb, int argc, MSTS_Vector *)
         }
 }
 
-EArg::EArg(string R, string L)
-{
-        this->_Left = R;
-        this->_Right = L;
-}
-EArg *Get_arg(char **argb, int argc, string k)
-{
-        string A;
-        string Z;
-        bool bf = 0;
-
-        for (int i = 0; i < argc; i++)
-        {
-                if (strcmp(argb[i], k.c_str()) == 0)
-                {
-                        bf = 1;
-                }
-                if (argb[i][0] != '-')
-                {
-                        if (bf)
-                        {
-                                Z = argb[i];
-                                break;
-                        }
-                        else
-                        {
-                                A = argb[i];
-                        }
-                }
-        }
-        return new EArg(A, Z);
-}
 void *Install(char **argb, int argc, MSTS_Vector *)
 {
         string import_Name = Get_arg(argb, argc, "--install")->_Left;
@@ -1062,7 +1051,6 @@ string Add_cgp(string f1, string f2, string Caract)
         split(j, iPj2, ' ');
         bool isint = 0;
         //cout<<"building buffer"<<iPj2.size()<<endl;
-
         for (int JI = 0; JI < iPj2.size(); JI++)
         {
                 if (!((strcmp(iPj2[JI].c_str(), " ") == 0) || (strcmp(iPj2[JI].c_str(), "") == 0)))
@@ -1073,7 +1061,7 @@ string Add_cgp(string f1, string f2, string Caract)
                                 if (!((strcmp(iPj1[IJ].c_str(), " ") == 0) || (strcmp(iPj1[IJ].c_str(), "") == 0)))
                                 {
 
-                                        if (strcmp(iPj2[JI].c_str(), iPj1[IJ].c_str()) == 0)
+                                        if (strcmp((AS(f2) + iPj2[JI]).c_str(), iPj1[IJ].c_str()) == 0)
                                         {
                                                 isint = 1;
                                         }
@@ -1081,7 +1069,7 @@ string Add_cgp(string f1, string f2, string Caract)
                         }
                         if (isint == 0)
                         {
-                                iPj1.push_back(iPj2[JI]);
+                                iPj1.push_back(AS(f2) + iPj2[JI]);
                         }
                         isint = 0;
                 }
@@ -1120,8 +1108,10 @@ int is_dep_of(string first, string Second)
         return 0;
 }
 
-//--merge
-
+//--merge some little change to do •
+string foreach (string sp, char splitter, string(*Taddr)(string, int))
+{
+}
 void *Merge(char **argb, int argc, MSTS_Vector *)
 {
 
@@ -1200,21 +1190,31 @@ void *Merge(char **argb, int argc, MSTS_Vector *)
         {
                 if (!((strcmp(V_B_T[i].c_str(), " ") == 0) || (strcmp(V_B_T[i].c_str(), "") == 0)))
                 {
-                        if (stoi(V_B_T[i]) < ret)
+                        string kl=V_B_T[i];
+                        kl=remove(kl,AS(src));
+                        try
                         {
-                                ret = stoi(V_B_T[i]);
+                                if (stoi(kl) < ret)
+                                {
+                                        ret = stoi(kl);
+                                }
+                        }
+                        catch (...)
+                        {
+                                cout << V_B_T[i] << " no conversion" << endl;
                         }
                 }
         }
         //cout << ret << endl;
 
         MSTS *M_Deps = new MSTS("", Deps, "source.Deps");
-        MSTS *M_P_N = new MSTS("", Dest, "Config.Exe");
+        MSTS *M_P_N = new MSTS("", Get_Data(Dest, "Config.Exe"), "Config.Exe");
         MSTS *M_includes = new MSTS("", includes, "source.includes");
         MSTS *M_source = new MSTS("", source, "source.cppfiles");
         MSTS *M_obj = new MSTS("", obj, "source.cppobj");
         MSTS *M_B_T = new MSTS("", to_string(ret), "Build.Type");
         MSTS *M_SW = new MSTS("", sw, "compile.Switchs");
+        MSTS *sha1V = new MSTS("", "", "source.Checksum_sha1");
 
         //Build.Type
 
@@ -1227,9 +1227,11 @@ void *Merge(char **argb, int argc, MSTS_Vector *)
         ED->add_MSTS(M_P_N, 4);
         ED->add_MSTS(M_B_T, 5);
         ED->add_MSTS(M_SW, 6);
+        ED->add_MSTS(sha1V, 7);
         MF->addView(ED);
         //cout << "Created: " << name << endl;
         MF->Save(name);
+        cout<<Dest<<" << "<<src<<endl;
         delete MF;
         delete ED;
 }
@@ -1284,6 +1286,7 @@ void *Clean(char **argb, int argc, MSTS_Vector *IN)
 void *clean(char **argb, int argc, MSTS_Vector *IN)
 {
         string o = Get_arg(argb, argc, "--clean")->_Left;
+
         //cout << o << endl;
         string f = IN->get_from_alias("thiscfg")->_Value;
         vector<string> kl;
@@ -1399,14 +1402,15 @@ void *Backup(char **argb, int argc, MSTS_Vector *IN)
 void *Backin(char **argb, int argc, MSTS_Vector *IN)
 {
         EArg *INP = Get_arg(argb, argc, "--backin");
-        string nt = INP->_Left;   //Cgp to backup
+        string nt = INP->_Left+".cgp";   //Cgp to backup
         string nts = INP->_Right; //name of backup
         string PathFolder = (((string) ".cgp/Backup/") + nt + "/" + nts);
         string currentfold = fs::current_path();
-        fs::current_path(PathFolder.c_str());
+        cout<<PathFolder.c_str()<<endl;
+        //fs::current_path(PathFolder.c_str());
         string cmd = "cgp " + nt + " --export " + currentfold;
         system(cmd.c_str());
-        fs::current_path(currentfold.c_str());
+        //fs::current_path(currentfold.c_str());
 }
 bool contain(string str, char c)
 {
@@ -1436,10 +1440,21 @@ string remove(string str, char i)
         str.erase(std::remove(str.begin(), str.end(), i), str.end());
         return str;
 }
+string remove(string mainStr, string toErase)
+{
+        // Search for the substring in string
+        size_t pos = mainStr.find(toErase);
+        if (pos != std::string::npos)
+        {
+                // If found then erase it from string
+                mainStr.erase(pos, toErase.length());
+        }
+        return mainStr;
+}
 void Create_declarations(const char *filename, ofstream &HPP_)
 {
         ifstream CPP_(filename);
-
+        HPP_ << "/*---" << filename << "---*/\n";
         string Buff;
 
         while (getline(CPP_, Buff))
@@ -1473,15 +1488,65 @@ void Create_declarations(const char *filename, ofstream &HPP_)
                                         smb = "";
                                 }
                         }
-                        if (!contain(DecName, ':') && (strcmp(Typename.c_str(), "") != 0) && (strcmp(DecName.c_str(), "") != 0))
+                        if ((!contain(DecName, ':')) && (strcmp(Typename.c_str(), "unsigned ") == 0))
                         {
-                                HPP_ << "#ifndef " << remove(remove(DecName, '*'), '(') << endl;
+                                cout << "\t" << Typename << ":" << DecName << ":" << DecTypes << ";" << endl;
+                                HPP_ << "#ifndef " << remove(remove(remove(DecName, '*'), '('), "char") << endl;
                                 HPP_ << "\t" << Typename << DecName << DecTypes << ";" << endl;
                                 HPP_ << "#endif" << endl;
+                        }
+                        else if (!contain(DecName, ':') && (strcmp(Typename.c_str(), "") != 0) && (strcmp(DecName.c_str(), "") != 0) && (strcmp(Typename.c_str(), "inline ") != 0) && (strcmp(Typename.c_str(), "static") != 0))
+                        {
+                                if (strcmp(DecName.c_str(), "main(") != 0)
+                                {
+                                        cout << "\t" << Typename << ":" << DecName << ":" << DecTypes << ";" << endl;
+                                        HPP_ << "#ifndef " << remove(remove(DecName, '*'), '(') << endl;
+                                        HPP_ << "\t" << Typename << DecName << DecTypes << ";" << endl;
+                                        HPP_ << "#endif" << endl;
+                                }
                         }
                 }
         }
         //HPP_.close();
+}
+void *Create_Header(char **argb, int argc, MSTS_Vector *IN)
+{
+        string cfgFile = Get_arg(argb, argc, "--create-header")->_Left;
+        string output = Get_arg(argb, argc, "--create-header")->_Right;
+
+        ofstream *Hppfile = new ofstream(output);
+        (*Hppfile) << ("/*\nHeader Generated By CGP\nYou should include this header file for test units\nYou should also create \"T_Config.hpp\"\n*/\n#include<T_Config.hpp>\n");
+        vector<string> kld;
+        split(Get_Data(cfgFile, "source.cppfiles"), kld, ' ');
+        for (int i = 0; i < kld.size(); i++)
+        {
+                if (!((strcmp(kld[i].c_str(), " ") == 0) || (strcmp(kld[i].c_str(), "") == 0)))
+                {
+                        Create_declarations(kld[i].c_str(), *Hppfile);
+                }
+        }
+        vector<string> kldeps;
+        split(Get_Data(cfgFile, "source.Deps"), kldeps, ' ');
+        string jkp = "";
+        for (int i = 0; i < kldeps.size(); i++)
+        {
+
+                if (!((strcmp(kldeps[i].c_str(), " ") == 0) || (strcmp(kldeps[i].c_str(), "") == 0)))
+                {
+                        jkp = AS(kldeps[i]) + "/";
+                        vector<string> kld3;
+                        split(Get_Data(kldeps[i], "source.cppfiles"), kld3, ' ');
+                        for (int j = 0; j < kld3.size(); j++)
+                        {
+                                if (!((strcmp(kld3[j].c_str(), " ") == 0) || (strcmp(kld3[j].c_str(), "") == 0)))
+                                {
+                                        Create_declarations((jkp + kld3[j]).c_str(), *Hppfile);
+                                }
+                        }
+                }
+        }
+
+        Hppfile->close();
 }
 void *Create_Tests(char **argb, int argc, MSTS_Vector *IN)
 {
@@ -1550,7 +1615,7 @@ int main(int argc, char **argv)
         CLAB<MSTS_Vector *> LaboratoryCmd;
 
         MSTS_Vector *NLV = new MSTS_Vector();
-        Laboratory.add_Callable(&Forcebuild, "--force", "set a switch for forcing --build to skip sha1 signature", NLV);
+        Laboratory.add_Callable(&Forcebuild, "--force", "set a switch for forcing --build to skip sha1 signature", NLV); //1
         Laboratory.add_Callable(&build, "--build", "compile and link project", NLV);
         Laboratory.add_Callable(&run, "--run", "./APPNAME", NLV);
         Laboratory.add_Callable(&Build_all, "--Build", "compile and link every projects in Directory", NLV);
@@ -1569,6 +1634,7 @@ int main(int argc, char **argv)
         LaboratoryCmd.add_Callable(&Backup, "--backup", "backup files ", NLV);
         LaboratoryCmd.add_Callable(&Backin, "--backin", "restore backup files ", NLV);
         LaboratoryCmd.add_Callable(&Create_Tests, "--create-tests", "create test in a folder ", NLV);
+        LaboratoryCmd.add_Callable(&Create_Header, "--create-header", "create header file of project ", NLV); //20
 
         //LaboratoryCmd.add_Callable(&Build_all, "--build*", "compile and link every project!", NLV);
 
@@ -1812,6 +1878,7 @@ int main(int argc, char **argv)
         }
         if (argc == 2 && haveto == 1)
         {
+                MF->Load(Fname);
                 system("stty raw");
                 while (1)
                 {
