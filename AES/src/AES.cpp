@@ -2,13 +2,7 @@
 #include <fstream>
 #include <iterator>
 #include <vector>
-unsigned char *gen_IV(unsigned char iv[32]){
 
-    for(int i=0;i<=IVlengh-1;i++){
-        iv[i]=rand() % 255 + 1;
-    }
-    return iv;
-}
 
 struct Aes_Save{
     char IV[IVlengh+1];
@@ -18,17 +12,10 @@ struct Aes_Save{
 };
 unsigned char *gen_IV(unsigned char iv[16]);
 
-unsigned char *Gen_Key(unsigned char key[32]){
-    int v;
-    for(int i=0;i<=(Keylengh-1);i++){
-        v=rand() % 255 + 1;
-        key[i]=v;
-    }
-    return key;
-}
+
 
 AES_CGPP::AES_CGPP(){
-    srand (time(NULL));
+    
 }
 int AES_CGPP::Load_Enc(const char*Filename){
 

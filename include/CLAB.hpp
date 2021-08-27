@@ -30,6 +30,7 @@ void CLAB<WildCard>::add_Callable(void *(Taddr)(char **, int, WildCard), string 
     NewObj.wc = wcs;
     this->Switchs.push_back(NewObj);
 }
+
 template <class WildCard>
 void CLAB<WildCard>::run(string name, char **args, int argc)
 {

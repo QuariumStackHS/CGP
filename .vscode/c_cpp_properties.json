@@ -5,23 +5,25 @@
             "includePath": [
                 "./include/",
                 "${workspaceFolder}/include/",
-                "${default}"
+                "${default}",
+                "${workspaceFolder}/Syn/.cgp/include",
+                "**/include"
             ],
             "defines": [
                 "${default}"
             ],
             "macFrameworkPath": [
-                "${default}",
+                "${default}"
             ],
             "forcedInclude": [
-                "${default}",
+                "${default}"
             ],
             "compileCommands": "${default}",
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": "${default}",
                 "path": [
-                    "${default}",
+                    "${default}"
                 ]
             },
             "intelliSenseMode": "${default}",

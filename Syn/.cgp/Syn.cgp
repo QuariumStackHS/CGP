@@ -1,5 +1,5 @@
 
-source.Checksum_sha1 = 'aaab054d859817263c1f9099493e5313721519a9 '
+source.Checksum_sha1 = 'aeb26e4bd7fb546a33d949ceb9170be66cb615d0 '
 thiscfg = '.cgp/Syn.cgp'
 exe = 'cgp'
 cwd = '/Applications/CGP/Syn'

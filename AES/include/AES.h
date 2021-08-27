@@ -6,8 +6,8 @@
 #include <stdio.h>
 
 using namespace std;
- const int Keylengh =64;
- const int IVlengh =32;
+ const int Keylengh =256;
+ const int IVlengh =256;
 
 class AES
 {
@@ -62,6 +62,7 @@ private:
 
 public:
   AES(int keyLen = 256);
+  ~AES();
 
   unsigned char *EncryptECB(unsigned char in[], unsigned int inLen, unsigned  char key[], unsigned int &outLen);
 
@@ -70,7 +71,7 @@ public:
   unsigned char *EncryptCBC(unsigned char in[], unsigned int inLen, unsigned  char key[], unsigned char * iv, unsigned int &outLen);
 
   unsigned char *DecryptCBC(unsigned char in[], unsigned int inLen, unsigned  char key[], unsigned char * iv);
-
+  //CFB
   unsigned char *EncryptCFB(unsigned char in[], unsigned int inLen, unsigned  char key[], unsigned char * iv, unsigned int &outLen);
 
   unsigned char *DecryptCFB(unsigned char in[], unsigned int inLen, unsigned  char key[], unsigned char * iv);
