@@ -556,8 +556,10 @@ void *build(char **argb, int argc, MSTS_Vector *DLL)
         vector<string>fplp;
         split(argb[1],fplp,'/');
         string fpl=fplp[fplp.size()-1];
+        cout<<".cgp/" +fpl+ ".cgp"<<endl;
         //cout<<argb[1]<<fs::current_path()<<endl;
         //cout<<".cgp/" +fpl+ ".cgp"<<endl;
+        
         Dyn_loader *IN = new Dyn_loader(".cgp/" +fpl+ ".cgp");
         compile(IN->get_from_alias("source.cppobj"), IN->get_from_alias("source.cppfiles"), IN->get_from_alias("source.includes"), IN->get_from_alias("G++.C++")->_Value, IN->get_from_alias("source.Checksum_sha1"), IN->get_from_alias("compile.Switchs"), argb[1], IN->get_from_alias("source.Deps"));
         link(IN->get_from_alias("source.cppobj"), IN->get_from_alias("source.Libs"), IN->get_from_alias("source.Deps"), IN->get_from_alias("Config.Exe")->_Value, argc, argb[0]);
@@ -607,6 +609,7 @@ void *_export(char **argb, int argc, MSTS_Vector *IN)
         {
                 patha += dirs[j] + '/';
         }
+        string bpath="";
         recursive_mkdir(patha.c_str());
         split(IN->get_from_alias("source.Deps")->_Value, Deps, ' ');
         split(IN->get_from_alias("source.cppfiles")->_Value, source, ' ');
@@ -647,9 +650,9 @@ void *_export(char **argb, int argc, MSTS_Vector *IN)
         {
                 if ((strcmp(Deps[i].c_str(), " ") != 0) && (strcmp(Deps[i].c_str(), "") != 0))
                 {
-                        string bpath=fs::current_path();
-                        cout<<bpath<<endl;
-                        fs::current_path(AS(Deps[i]));
+                        bpath=fs::current_path();
+                        cout<<"building:"<<bpath+"/"+AS(Deps[i])<<endl;
+                        fs::current_path(bpath+"/"+AS(Deps[i]));
                         string cmd = "cgp " + remove(Deps[i],AS(Deps[i])) + " --export " + exportPath + '/' + AS(Deps[i]);
                         cout << cmd << endl;
                         system(cmd.c_str());

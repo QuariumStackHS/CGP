@@ -368,6 +368,7 @@ void AES::RotWord(unsigned char *a)
   a[2] = a[3];
   a[3] = c;
 }
+
 AES::~AES(){
 }
 void AES::XorWords(unsigned char *a, unsigned char *b, unsigned char *c)

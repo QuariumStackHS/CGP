@@ -1,9 +1,0 @@
-CGP:
-    commands:
-        --export
-            usage:
-            ""
-        --add
-            usage:
-            ""
-        
